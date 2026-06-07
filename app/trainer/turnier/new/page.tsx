@@ -8,12 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
-const CATEGORIES = ['U7', 'U8', 'U9', 'U10', 'U11', 'U12', 'U13', 'U14']
-
 export default function NewTournamentPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ name: '', date: '', time: '', location: '', category: '', notes: '' })
+  const [form, setForm] = useState({ name: '', date: '', time: '', location: '', notes: '' })
 
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') {
@@ -35,7 +33,6 @@ export default function NewTournamentPage() {
       date: form.date,
       time: form.time || null,
       location: form.location.trim() || null,
-      category: form.category || null,
       notes: form.notes.trim() || null,
     })
 
@@ -72,26 +69,6 @@ export default function NewTournamentPage() {
         <div className="space-y-2">
           <Label htmlFor="location">Ort</Label>
           <Input id="location" placeholder="z.B. Sportanlage Heerenschürli" value={form.location} onChange={(e) => set('location', e.target.value)} />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Kategorie</Label>
-          <div className="flex flex-wrap gap-2">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => set('category', form.category === cat ? '' : cat)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                  form.category === cat
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:border-border/80'
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
         </div>
 
         <div className="space-y-2">

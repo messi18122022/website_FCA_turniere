@@ -128,11 +128,6 @@ function TournamentItem({ t, past }: { t: TournamentWithCount; past?: boolean })
     >
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
-          {t.category && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary shrink-0">
-              {t.category}
-            </span>
-          )}
           <span className="text-sm font-semibold truncate">{t.name}</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">

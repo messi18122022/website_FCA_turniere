@@ -88,13 +88,6 @@ export default function TrainerTurnierDetailPage() {
 
         <div className="flex items-start justify-between gap-3 mt-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              {tournament.category && (
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/15 text-primary">
-                  {tournament.category}
-                </span>
-              )}
-            </div>
             <h1 className="text-2xl font-extrabold tracking-tight">{tournament.name}</h1>
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-sm text-muted-foreground">
               <span>{format(new Date(tournament.date), 'EEEE, d. MMMM yyyy', { locale: de })}</span>
