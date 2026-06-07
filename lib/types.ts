@@ -17,6 +17,7 @@ export interface Tournament {
   modus: string | null
   belag: 'Halle' | 'Rasen' | null
   maps_url: string | null
+  spielplan_url: string | null
   notes: string | null
   created_at: string
 }

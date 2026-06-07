@@ -18,7 +18,7 @@ export default function EditTournamentPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    name: '', date: '', time: '', location: '', mapsUrl: '',
+    name: '', date: '', time: '', location: '', mapsUrl: '', spielplanUrl: '',
     modus: '', modusCustom: '', belag: '', notes: '',
   })
 
@@ -36,6 +36,7 @@ export default function EditTournamentPage() {
         time: data.time?.slice(0, 5) ?? '',
         location: data.location ?? '',
         mapsUrl: data.maps_url ?? '',
+        spielplanUrl: data.spielplan_url ?? '',
         modus: isCustomModus ? 'Spezielles' : (data.modus ?? ''),
         modusCustom: isCustomModus ? (data.modus ?? '') : '',
         belag: data.belag ?? '',
@@ -64,6 +65,7 @@ export default function EditTournamentPage() {
       time: form.time || null,
       location: form.location.trim() || null,
       maps_url: form.mapsUrl.trim() || null,
+      spielplan_url: form.spielplanUrl.trim() || null,
       modus: modusValue,
       belag: form.belag || null,
       notes: form.notes.trim() || null,
@@ -112,6 +114,11 @@ export default function EditTournamentPage() {
         <div className="space-y-2">
           <Label htmlFor="mapsUrl">Maps-Link</Label>
           <Input id="mapsUrl" placeholder="https://maps.app.goo.gl/..." value={form.mapsUrl} onChange={(e) => set('mapsUrl', e.target.value)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="spielplanUrl">Spielplan-Link</Label>
+          <Input id="spielplanUrl" placeholder="https://..." value={form.spielplanUrl} onChange={(e) => set('spielplanUrl', e.target.value)} />
         </div>
 
         <div className="space-y-2">
