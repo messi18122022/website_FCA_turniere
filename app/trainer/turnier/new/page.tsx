@@ -16,7 +16,7 @@ export default function NewTournamentPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
-    name: '', date: '', time: '', location: '',
+    name: '', date: '', time: '', location: '', mapsUrl: '',
     modus: '', modusCustom: '', belag: '', notes: '',
   })
 
@@ -44,6 +44,7 @@ export default function NewTournamentPage() {
       date: form.date,
       time: form.time || null,
       location: form.location.trim() || null,
+      maps_url: form.mapsUrl.trim() || null,
       modus: modusValue,
       belag: form.belag || null,
       notes: form.notes.trim() || null,
@@ -82,6 +83,11 @@ export default function NewTournamentPage() {
         <div className="space-y-2">
           <Label htmlFor="location">Ort</Label>
           <Input id="location" placeholder="z.B. Sportanlage Heerenschürli" value={form.location} onChange={(e) => set('location', e.target.value)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="mapsUrl">Maps-Link</Label>
+          <Input id="mapsUrl" placeholder="https://maps.app.goo.gl/..." value={form.mapsUrl} onChange={(e) => set('mapsUrl', e.target.value)} />
         </div>
 
         <div className="space-y-2">

@@ -9,6 +9,7 @@ ALTER TABLE players ADD COLUMN IF NOT EXISTS birthdate DATE;
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS time TIME;
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS modus TEXT;
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS belag TEXT;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS maps_url TEXT;
 
 -- 3. Anmeldungen-Tabelle (neu)
 CREATE TABLE IF NOT EXISTS tournament_registrations (
