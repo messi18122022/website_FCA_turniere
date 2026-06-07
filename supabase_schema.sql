@@ -7,12 +7,8 @@
 -- =============================================
 ALTER TABLE players ADD COLUMN IF NOT EXISTS birthdate DATE;
 
--- Geburtsdaten eintragen (Trainer macht das im Supabase Dashboard):
--- UPDATE players SET birthdate = '2016-08-12' WHERE vorname = 'Flori';
--- usw. für jeden Spieler
-
 -- =============================================
--- 2. tournaments
+-- 2. tournaments (neu: time-Spalte)
 -- =============================================
 CREATE TABLE IF NOT EXISTS tournaments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -25,7 +21,6 @@ CREATE TABLE IF NOT EXISTS tournaments (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Falls die Tabelle bereits existiert (ohne time-Spalte):
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS time TIME;
 
 -- =============================================
@@ -40,15 +35,24 @@ CREATE TABLE IF NOT EXISTS tournament_registrations (
 );
 
 -- =============================================
--- RLS Policies
+-- RLS Policies (bestehende zuerst löschen)
 -- =============================================
 ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tournament_registrations ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "public read tournaments" ON tournaments;
+DROP POLICY IF EXISTS "public insert tournaments" ON tournaments;
+DROP POLICY IF EXISTS "public update tournaments" ON tournaments;
+DROP POLICY IF EXISTS "public delete tournaments" ON tournaments;
 
 CREATE POLICY "public read tournaments" ON tournaments FOR SELECT USING (true);
 CREATE POLICY "public insert tournaments" ON tournaments FOR INSERT WITH CHECK (true);
 CREATE POLICY "public update tournaments" ON tournaments FOR UPDATE USING (true);
 CREATE POLICY "public delete tournaments" ON tournaments FOR DELETE USING (true);
+
+DROP POLICY IF EXISTS "public read tournament_registrations" ON tournament_registrations;
+DROP POLICY IF EXISTS "public insert tournament_registrations" ON tournament_registrations;
+DROP POLICY IF EXISTS "public delete tournament_registrations" ON tournament_registrations;
 
 CREATE POLICY "public read tournament_registrations" ON tournament_registrations FOR SELECT USING (true);
 CREATE POLICY "public insert tournament_registrations" ON tournament_registrations FOR INSERT WITH CHECK (true);
