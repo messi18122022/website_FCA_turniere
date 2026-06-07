@@ -93,6 +93,8 @@ export default function TrainerTurnierDetailPage() {
               <span>{format(new Date(tournament.date), 'EEEE, d. MMMM yyyy', { locale: de })}</span>
               {tournament.time && <span>{tournament.time.slice(0, 5)} Uhr</span>}
               {tournament.location && <span>{tournament.location}</span>}
+              {tournament.belag && <span>{tournament.belag === 'Halle' ? '🏟 Halle' : '🌱 Rasen'}</span>}
+              {tournament.modus && <span>⚽ {tournament.modus}</span>}
             </div>
           </div>
           <button

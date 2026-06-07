@@ -7,11 +7,18 @@ import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { cn } from '@/lib/utils'
+
+const MODUS_OPTIONS = ['4+1', '5+1', '6+1', 'Spezielles']
+const BELAG_OPTIONS = ['Halle', 'Rasen'] as const
 
 export default function NewTournamentPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({ name: '', date: '', time: '', location: '', notes: '' })
+  const [form, setForm] = useState({
+    name: '', date: '', time: '', location: '',
+    modus: '', modusCustom: '', belag: '', notes: '',
+  })
 
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') {
@@ -28,11 +35,17 @@ export default function NewTournamentPage() {
     if (!form.name.trim() || !form.date) return
     setSaving(true)
 
+    const modusValue = form.modus === 'Spezielles'
+      ? form.modusCustom.trim() || null
+      : form.modus || null
+
     const { error } = await supabase.from('tournaments').insert({
       name: form.name.trim(),
       date: form.date,
       time: form.time || null,
       location: form.location.trim() || null,
+      modus: modusValue,
+      belag: form.belag || null,
       notes: form.notes.trim() || null,
     })
 
@@ -69,6 +82,56 @@ export default function NewTournamentPage() {
         <div className="space-y-2">
           <Label htmlFor="location">Ort</Label>
           <Input id="location" placeholder="z.B. Sportanlage Heerenschürli" value={form.location} onChange={(e) => set('location', e.target.value)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Modus</Label>
+          <div className="flex gap-2 flex-wrap">
+            {MODUS_OPTIONS.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => set('modus', form.modus === m ? '' : m)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors',
+                  form.modus === m
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+          {form.modus === 'Spezielles' && (
+            <Input
+              placeholder="z.B. 7+1, 3+3, ..."
+              value={form.modusCustom}
+              onChange={(e) => set('modusCustom', e.target.value)}
+              className="mt-2"
+            />
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label>Belag</Label>
+          <div className="flex gap-2">
+            {BELAG_OPTIONS.map((b) => (
+              <button
+                key={b}
+                type="button"
+                onClick={() => set('belag', form.belag === b ? '' : b)}
+                className={cn(
+                  'px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors',
+                  form.belag === b
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {b === 'Halle' ? '🏟 Halle' : '🌱 Rasen'}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-2">

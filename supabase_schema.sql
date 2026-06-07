@@ -5,8 +5,10 @@
 -- 1. Geburtsdatum zu Spielern
 ALTER TABLE players ADD COLUMN IF NOT EXISTS birthdate DATE;
 
--- 2. Uhrzeit zu Turnieren
+-- 2. Neue Spalten zu Turnieren
 ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS time TIME;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS modus TEXT;
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS belag TEXT;
 
 -- 3. Anmeldungen-Tabelle (neu)
 CREATE TABLE IF NOT EXISTS tournament_registrations (

@@ -14,7 +14,8 @@ export interface Tournament {
   date: string
   time: string | null
   location: string | null
-  category: string | null
+  modus: string | null
+  belag: 'Halle' | 'Rasen' | null
   notes: string | null
   created_at: string
 }

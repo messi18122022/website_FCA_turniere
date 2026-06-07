@@ -173,6 +173,18 @@ export default function ElternTurnierePage() {
                         <span>{t.location}</span>
                       </div>
                     )}
+                    {t.belag && (
+                      <div className="flex items-center gap-1.5">
+                        <span>{t.belag === 'Halle' ? '🏟' : '🌱'}</span>
+                        <span>{t.belag}</span>
+                      </div>
+                    )}
+                    {t.modus && (
+                      <div className="flex items-center gap-1.5">
+                        <span>⚽</span>
+                        <span>{t.modus}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
