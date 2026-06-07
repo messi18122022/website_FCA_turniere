@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,13 +13,13 @@ const CATEGORIES = ['U7', 'U8', 'U9', 'U10', 'U11', 'U12', 'U13', 'U14']
 export default function NewTournamentPage() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState({
-    name: '',
-    date: '',
-    location: '',
-    category: '',
-    notes: '',
-  })
+  const [form, setForm] = useState({ name: '', date: '', time: '', location: '', category: '', notes: '' })
+
+  useEffect(() => {
+    if (sessionStorage.getItem('fca_trainer') !== 'true') {
+      router.replace('/trainer')
+    }
+  }, [router])
 
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -29,61 +30,48 @@ export default function NewTournamentPage() {
     if (!form.name.trim() || !form.date) return
     setSaving(true)
 
-    const { data, error } = await supabase
-      .from('tournaments')
-      .insert({
-        name: form.name.trim(),
-        date: form.date,
-        location: form.location.trim() || null,
-        category: form.category || null,
-        notes: form.notes.trim() || null,
-      })
-      .select()
-      .single()
+    const { error } = await supabase.from('tournaments').insert({
+      name: form.name.trim(),
+      date: form.date,
+      time: form.time || null,
+      location: form.location.trim() || null,
+      category: form.category || null,
+      notes: form.notes.trim() || null,
+    })
 
-    if (error || !data) { setSaving(false); return }
-
-    router.push(`/turnier/${data.id}`)
+    setSaving(false)
+    if (!error) router.push('/trainer/turniere')
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-extrabold tracking-tight">Neues Turnier</h1>
-        <p className="text-sm text-muted-foreground mt-1">Turnier-Details erfassen</p>
+        <Link href="/trainer/turniere" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+          ← Zurück
+        </Link>
+        <h1 className="text-2xl font-extrabold tracking-tight mt-3">Neues Turnier</h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor="name">Name *</Label>
-          <Input
-            id="name"
-            placeholder="z.B. Hallencup FC Altstetten"
-            value={form.name}
-            onChange={(e) => set('name', e.target.value)}
-            required
-          />
+          <Input id="name" placeholder="z.B. Hallencup FC Altstetten" value={form.name} onChange={(e) => set('name', e.target.value)} required />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="date">Datum *</Label>
-          <Input
-            id="date"
-            type="date"
-            value={form.date}
-            onChange={(e) => set('date', e.target.value)}
-            required
-          />
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="date">Datum *</Label>
+            <Input id="date" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} required />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="time">Zeit</Label>
+            <Input id="time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
+          </div>
         </div>
 
         <div className="space-y-2">
           <Label htmlFor="location">Ort</Label>
-          <Input
-            id="location"
-            placeholder="z.B. Sportanlage Heerenschürli"
-            value={form.location}
-            onChange={(e) => set('location', e.target.value)}
-          />
+          <Input id="location" placeholder="z.B. Sportanlage Heerenschürli" value={form.location} onChange={(e) => set('location', e.target.value)} />
         </div>
 
         <div className="space-y-2">
@@ -108,22 +96,11 @@ export default function NewTournamentPage() {
 
         <div className="space-y-2">
           <Label htmlFor="notes">Notizen</Label>
-          <Input
-            id="notes"
-            placeholder="Optional..."
-            value={form.notes}
-            onChange={(e) => set('notes', e.target.value)}
-          />
+          <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => router.back()}
-            disabled={saving}
-          >
+          <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()} disabled={saving}>
             Abbrechen
           </Button>
           <Button type="submit" className="flex-1" disabled={saving || !form.name || !form.date}>

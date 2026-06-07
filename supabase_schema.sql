@@ -1,63 +1,55 @@
--- FC Zürich Affoltern – Turniere Schema
+-- FC Zürich Affoltern – Turniere Anmeldetool
 -- In der GLEICHEN Supabase-DB wie die Anwesenheiten ausführen
--- (players-Tabelle ist bereits vorhanden)
+-- (players-Tabelle bereits vorhanden)
 
-CREATE TABLE tournaments (
+-- =============================================
+-- 1. players: Geburtsdatum hinzufügen
+-- =============================================
+ALTER TABLE players ADD COLUMN IF NOT EXISTS birthdate DATE;
+
+-- Geburtsdaten eintragen (Trainer macht das im Supabase Dashboard):
+-- UPDATE players SET birthdate = '2016-08-12' WHERE vorname = 'Flori';
+-- usw. für jeden Spieler
+
+-- =============================================
+-- 2. tournaments
+-- =============================================
+CREATE TABLE IF NOT EXISTS tournaments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   date DATE NOT NULL,
+  time TIME,
   location TEXT,
   category TEXT,
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE TABLE tournament_games (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
-  opponent TEXT NOT NULL,
-  goals_for INTEGER NOT NULL DEFAULT 0,
-  goals_against INTEGER NOT NULL DEFAULT 0,
-  game_order INTEGER,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+-- Falls die Tabelle bereits existiert (ohne time-Spalte):
+ALTER TABLE tournaments ADD COLUMN IF NOT EXISTS time TIME;
 
-CREATE TABLE tournament_squad (
+-- =============================================
+-- 3. tournament_registrations
+-- =============================================
+CREATE TABLE IF NOT EXISTS tournament_registrations (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
   player_id UUID REFERENCES players(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(tournament_id, player_id)
 );
 
-CREATE TABLE tournament_goals (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tournament_id UUID REFERENCES tournaments(id) ON DELETE CASCADE,
-  game_id UUID REFERENCES tournament_games(id) ON DELETE CASCADE,
-  player_id UUID REFERENCES players(id) ON DELETE CASCADE,
-  count INTEGER NOT NULL DEFAULT 1
-);
-
--- RLS
+-- =============================================
+-- RLS Policies
+-- =============================================
 ALTER TABLE tournaments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tournament_games ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tournament_squad ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tournament_goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tournament_registrations ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "public read tournaments" ON tournaments FOR SELECT USING (true);
 CREATE POLICY "public insert tournaments" ON tournaments FOR INSERT WITH CHECK (true);
 CREATE POLICY "public update tournaments" ON tournaments FOR UPDATE USING (true);
 CREATE POLICY "public delete tournaments" ON tournaments FOR DELETE USING (true);
 
-CREATE POLICY "public read tournament_games" ON tournament_games FOR SELECT USING (true);
-CREATE POLICY "public insert tournament_games" ON tournament_games FOR INSERT WITH CHECK (true);
-CREATE POLICY "public update tournament_games" ON tournament_games FOR UPDATE USING (true);
-CREATE POLICY "public delete tournament_games" ON tournament_games FOR DELETE USING (true);
-
-CREATE POLICY "public read tournament_squad" ON tournament_squad FOR SELECT USING (true);
-CREATE POLICY "public insert tournament_squad" ON tournament_squad FOR INSERT WITH CHECK (true);
-CREATE POLICY "public delete tournament_squad" ON tournament_squad FOR DELETE USING (true);
-
-CREATE POLICY "public read tournament_goals" ON tournament_goals FOR SELECT USING (true);
-CREATE POLICY "public insert tournament_goals" ON tournament_goals FOR INSERT WITH CHECK (true);
-CREATE POLICY "public delete tournament_goals" ON tournament_goals FOR DELETE USING (true);
+CREATE POLICY "public read tournament_registrations" ON tournament_registrations FOR SELECT USING (true);
+CREATE POLICY "public insert tournament_registrations" ON tournament_registrations FOR INSERT WITH CHECK (true);
+CREATE POLICY "public delete tournament_registrations" ON tournament_registrations FOR DELETE USING (true);

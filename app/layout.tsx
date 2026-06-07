@@ -11,7 +11,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   title: 'FCA Turniere',
-  description: 'Turnier-Resultate und Statistiken',
+  description: 'Turnieranmeldungen FC Zürich Affoltern',
   icons: {
     icon: [
       { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
