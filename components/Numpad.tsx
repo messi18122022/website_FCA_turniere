@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 interface NumpadProps {
@@ -29,6 +29,16 @@ export default function Numpad({ mode, onComplete, title, subtitle, error, loadi
   function confirm() {
     if (digits.length === maxLen && !loading) onComplete(digits)
   }
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key >= '0' && e.key <= '9') addDigit(e.key)
+      else if (e.key === 'Backspace') backspace()
+      else if (e.key === 'Enter') confirm()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [digits, loading])
 
   function renderDisplay() {
     if (mode === 'date') {

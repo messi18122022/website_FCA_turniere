@@ -7,6 +7,8 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Tournament, Player } from '@/lib/types'
+import { buttonVariants } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 export default function TrainerTurnierDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -97,12 +99,19 @@ export default function TrainerTurnierDetailPage() {
               {tournament.modus && <span>⚽ {tournament.modus}</span>}
             </div>
           </div>
-          <button
-            onClick={deleteTournament}
-            disabled={deleting}
-            className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-muted shrink-0"
-            title="Turnier löschen"
-          >
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href={`/trainer/turnier/${id}/edit`}
+              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-lg h-8 px-3 text-xs')}
+            >
+              Bearbeiten
+            </Link>
+            <button
+              onClick={deleteTournament}
+              disabled={deleting}
+              className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-muted"
+              title="Turnier löschen"
+            >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <polyline points="3 6 5 6 21 6"/>
               <path d="M19 6l-1 14H6L5 6"/>
@@ -110,6 +119,7 @@ export default function TrainerTurnierDetailPage() {
               <path d="M9 6V4h6v2"/>
             </svg>
           </button>
+          </div>
         </div>
       </div>
 
