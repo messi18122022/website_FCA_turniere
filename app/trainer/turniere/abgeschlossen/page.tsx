@@ -131,7 +131,7 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           {t.rang != null && t.total_teams != null && (
             <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/15 text-primary">
-              {t.rang}. / {t.total_teams}
+              {t.rang}/{t.total_teams}
             </span>
           )}
           <Link href={`/trainer/turnier/${t.id}/edit`} className="rounded-xl px-4 py-2 text-sm font-semibold bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">

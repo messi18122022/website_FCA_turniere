@@ -143,7 +143,7 @@ function AbgeschlossenCard({ t, playerName, playerMap }: { t: TournamentRow; pla
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           {t.rang != null && t.total_teams != null && (
             <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/15 text-primary">
-              {t.rang}. / {t.total_teams}
+              {t.rang}/{t.total_teams}
             </span>
           )}
           {t.aufgeboten && (
