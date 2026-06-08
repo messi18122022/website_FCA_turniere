@@ -7,16 +7,18 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 function getNavLinks(pathname: string) {
-  if (pathname.startsWith('/eltern/turniere')) {
+  if (pathname.startsWith('/eltern/turniere') || pathname === '/eltern/statistiken') {
     return [
       { href: '/eltern/turniere', label: 'Anstehend' },
       { href: '/eltern/turniere/abgeschlossen', label: 'Abgeschlossen' },
+      { href: '/eltern/statistiken', label: 'Statistiken' },
     ]
   }
-  if (pathname.startsWith('/trainer/turniere') || pathname.startsWith('/trainer/turnier')) {
+  if (pathname.startsWith('/trainer/turniere') || pathname.startsWith('/trainer/turnier') || pathname === '/trainer/statistiken') {
     return [
       { href: '/trainer/turniere', label: 'Anstehend' },
       { href: '/trainer/turniere/abgeschlossen', label: 'Abgeschlossen' },
+      { href: '/trainer/statistiken', label: 'Statistiken' },
     ]
   }
   return []
@@ -75,7 +77,7 @@ export default function Header() {
       {showMenu && (
         <div className={cn(
           'overflow-hidden transition-all duration-200 ease-in-out',
-          open ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+          open ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
         )}>
           <nav className="border-t border-border/60 bg-card/95 backdrop-blur">
             <div className="max-w-2xl mx-auto px-4 py-1">
