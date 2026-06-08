@@ -23,6 +23,7 @@ export default function AufgebotPage() {
   const [players, setPlayers] = useState<PlayerRow[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') {
@@ -106,13 +107,24 @@ export default function AufgebotPage() {
   }
 
   async function save() {
+    setError(null)
     setSaving(true)
-    await supabase.from('tournament_aufgebot').delete().eq('tournament_id', id)
+    const { error: delError } = await supabase.from('tournament_aufgebot').delete().eq('tournament_id', id)
+    if (delError) {
+      setError(`Fehler: ${delError.message}`)
+      setSaving(false)
+      return
+    }
     const selected = players.filter(p => p.selected)
     if (selected.length > 0) {
-      await supabase.from('tournament_aufgebot').insert(
+      const { error: insError } = await supabase.from('tournament_aufgebot').insert(
         selected.map(p => ({ tournament_id: id, player_id: p.id }))
       )
+      if (insError) {
+        setError(`Fehler: ${insError.message}`)
+        setSaving(false)
+        return
+      }
     }
     router.push('/trainer/turniere')
   }
@@ -199,6 +211,10 @@ export default function AufgebotPage() {
           )
         })}
       </div>
+
+      {error && (
+        <p className="text-sm text-red-500 bg-red-500/10 rounded-xl px-4 py-3">{error}</p>
+      )}
 
       {players.length > 0 && (
         <button

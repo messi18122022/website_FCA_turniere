@@ -13,6 +13,7 @@ interface TournamentRow extends Tournament {
   registering: boolean
   registeredNames: string[]
   aufgeboten: boolean
+  aufgebotNames: string[]
 }
 
 export default function ElternTurnierePage() {
@@ -47,6 +48,13 @@ export default function ElternTurnierePage() {
     const myAufgebotIds = new Set(
       (aufgebotData ?? []).filter((a: { player_id: string }) => a.player_id === pid).map((a: { tournament_id: string }) => a.tournament_id)
     )
+    const aufgebotByTournament: Record<string, string[]> = {}
+    for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
+      if (!aufgebotByTournament[a.tournament_id]) aufgebotByTournament[a.tournament_id] = []
+      const name = playerMap[a.player_id]
+      if (name) aufgebotByTournament[a.tournament_id].push(name)
+    }
+    for (const tid of Object.keys(aufgebotByTournament)) aufgebotByTournament[tid].sort()
     setTournaments(
       (tourData ?? []).map((t: Tournament) => {
         const regsForTournament = (allRegData ?? []).filter((r: { tournament_id: string }) => r.tournament_id === t.id)
@@ -56,6 +64,7 @@ export default function ElternTurnierePage() {
           registering: false,
           registeredNames: regsForTournament.map((r: { player_id: string }) => playerMap[r.player_id]).filter(Boolean).sort(),
           aufgeboten: myAufgebotIds.has(t.id),
+          aufgebotNames: aufgebotByTournament[t.id] ?? [],
         }
       })
     )
@@ -182,6 +191,17 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
           <div className="flex flex-wrap gap-1.5">
             {t.registeredNames.map((name) => (
               <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>{name}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {t.aufgebotNames.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/40">
+          <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} {t.aufgebotNames.length === 1 ? 'Kind' : 'Kinder'}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {t.aufgebotNames.map((name) => (
+              <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-green-500/20 text-green-600' : 'bg-primary/15 text-primary')}>{name}</span>
             ))}
           </div>
         </div>
