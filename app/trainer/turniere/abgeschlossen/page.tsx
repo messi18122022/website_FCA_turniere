@@ -26,6 +26,9 @@ export default function TrainerAbgeschlossenPage() {
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') { router.replace('/trainer'); return }
     load()
+    const onVisible = () => { if (document.visibilityState === 'visible') load() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [router])
 
   async function load() {

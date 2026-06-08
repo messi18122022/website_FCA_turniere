@@ -31,6 +31,9 @@ export default function ElternAbgeschlossenPage() {
     setPlayerId(id)
     setPlayerName(name)
     loadTournaments(id)
+    const onVisible = () => { if (document.visibilityState === 'visible') loadTournaments(id) }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => document.removeEventListener('visibilitychange', onVisible)
   }, [router])
 
   async function loadTournaments(pid: string) {
