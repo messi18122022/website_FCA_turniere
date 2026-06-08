@@ -9,16 +9,19 @@ import { supabase } from '@/lib/supabase'
 import { Tournament } from '@/lib/types'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import GameSection, { AufgebotPlayer } from '@/components/GameSection'
 
 interface TournamentRow extends Tournament {
   registration_count: number
   registeredNames: string[]
   aufgebotNames: string[]
+  aufgebotPlayers: AufgebotPlayer[]
 }
 
 export default function TrainerTurnierePage() {
   const router = useRouter()
   const [tournaments, setTournaments] = useState<TournamentRow[]>([])
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -35,32 +38,36 @@ export default function TrainerTurnierePage() {
       supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
 
-    const playerMap: Record<string, string> = {}
-    for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
+    const pm: Record<string, string> = {}
+    for (const p of (playersData ?? [])) pm[p.id] = p.vorname
+    setPlayerMap(pm)
 
     const counts: Record<string, number> = {}
     const namesByTournament: Record<string, string[]> = {}
     for (const r of (regData ?? []) as { tournament_id: string; player_id: string }[]) {
       counts[r.tournament_id] = (counts[r.tournament_id] ?? 0) + 1
       if (!namesByTournament[r.tournament_id]) namesByTournament[r.tournament_id] = []
-      const name = playerMap[r.player_id]
+      const name = pm[r.player_id]
       if (name) namesByTournament[r.tournament_id].push(name)
     }
     for (const tid of Object.keys(namesByTournament)) namesByTournament[tid].sort()
 
-    const aufgebotByTournament: Record<string, string[]> = {}
+    const aufgebotPlayersByTournament: Record<string, AufgebotPlayer[]> = {}
     for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
-      if (!aufgebotByTournament[a.tournament_id]) aufgebotByTournament[a.tournament_id] = []
-      const name = playerMap[a.player_id]
-      if (name) aufgebotByTournament[a.tournament_id].push(name)
+      if (!aufgebotPlayersByTournament[a.tournament_id]) aufgebotPlayersByTournament[a.tournament_id] = []
+      const name = pm[a.player_id]
+      if (name) aufgebotPlayersByTournament[a.tournament_id].push({ id: a.player_id, vorname: name })
     }
-    for (const tid of Object.keys(aufgebotByTournament)) aufgebotByTournament[tid].sort()
+    for (const tid of Object.keys(aufgebotPlayersByTournament)) {
+      aufgebotPlayersByTournament[tid].sort((a, b) => a.vorname.localeCompare(b.vorname))
+    }
 
     setTournaments((tourData ?? []).map((t: Tournament) => ({
       ...t,
       registration_count: counts[t.id] ?? 0,
       registeredNames: namesByTournament[t.id] ?? [],
-      aufgebotNames: aufgebotByTournament[t.id] ?? [],
+      aufgebotNames: (aufgebotPlayersByTournament[t.id] ?? []).map(p => p.vorname),
+      aufgebotPlayers: aufgebotPlayersByTournament[t.id] ?? [],
     })))
     setLoading(false)
   }
@@ -105,14 +112,14 @@ export default function TrainerTurnierePage() {
 
       {!loading && tournaments.length > 0 && (
         <div className="space-y-3">
-          {tournaments.map((t) => <TournamentCard key={t.id} t={t} />)}
+          {tournaments.map((t) => <TournamentCard key={t.id} t={t} playerMap={playerMap} />)}
         </div>
       )}
     </div>
   )
 }
 
-function TournamentCard({ t }: { t: TournamentRow }) {
+function TournamentCard({ t, playerMap }: { t: TournamentRow; playerMap: Record<string, string> }) {
   const [expanded, setExpanded] = useState(false)
   const hasDetails = t.registeredNames.length > 0
 
@@ -204,6 +211,13 @@ function TournamentCard({ t }: { t: TournamentRow }) {
           </button>
         </div>
       )}
+
+      <GameSection
+        tournamentId={t.id}
+        aufgebotPlayers={t.aufgebotPlayers}
+        playerMap={playerMap}
+        mode="trainer"
+      />
     </div>
   )
 }

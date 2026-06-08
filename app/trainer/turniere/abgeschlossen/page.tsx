@@ -7,16 +7,18 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Tournament } from '@/lib/types'
-import { cn } from '@/lib/utils'
+import GameSection, { AufgebotPlayer } from '@/components/GameSection'
 
 interface TournamentRow extends Tournament {
   registration_count: number
   registeredNames: string[]
+  aufgebotPlayers: AufgebotPlayer[]
 }
 
 export default function TrainerAbgeschlossenPage() {
   const router = useRouter()
   const [tournaments, setTournaments] = useState<TournamentRow[]>([])
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -26,28 +28,41 @@ export default function TrainerAbgeschlossenPage() {
 
   async function load() {
     setLoading(true)
-    const [{ data: tourData }, { data: regData }, { data: playersData }] = await Promise.all([
+    const [{ data: tourData }, { data: regData }, { data: playersData }, { data: aufgebotData }] = await Promise.all([
       supabase.from('tournaments').select('*').eq('abgeschlossen', true).order('date', { ascending: false }),
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
+      supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
-    const playerMap: Record<string, string> = {}
-    for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
+    const pm: Record<string, string> = {}
+    for (const p of (playersData ?? [])) pm[p.id] = p.vorname
+    setPlayerMap(pm)
 
     const counts: Record<string, number> = {}
     const namesByTournament: Record<string, string[]> = {}
     for (const r of (regData ?? []) as { tournament_id: string; player_id: string }[]) {
       counts[r.tournament_id] = (counts[r.tournament_id] ?? 0) + 1
       if (!namesByTournament[r.tournament_id]) namesByTournament[r.tournament_id] = []
-      const name = playerMap[r.player_id]
+      const name = pm[r.player_id]
       if (name) namesByTournament[r.tournament_id].push(name)
     }
     for (const tid of Object.keys(namesByTournament)) namesByTournament[tid].sort()
+
+    const aufgebotPlayersByTournament: Record<string, AufgebotPlayer[]> = {}
+    for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
+      if (!aufgebotPlayersByTournament[a.tournament_id]) aufgebotPlayersByTournament[a.tournament_id] = []
+      const name = pm[a.player_id]
+      if (name) aufgebotPlayersByTournament[a.tournament_id].push({ id: a.player_id, vorname: name })
+    }
+    for (const tid of Object.keys(aufgebotPlayersByTournament)) {
+      aufgebotPlayersByTournament[tid].sort((a, b) => a.vorname.localeCompare(b.vorname))
+    }
 
     setTournaments((tourData ?? []).map((t: Tournament) => ({
       ...t,
       registration_count: counts[t.id] ?? 0,
       registeredNames: namesByTournament[t.id] ?? [],
+      aufgebotPlayers: aufgebotPlayersByTournament[t.id] ?? [],
     })))
     setLoading(false)
   }
@@ -115,6 +130,13 @@ export default function TrainerAbgeschlossenPage() {
                   </div>
                 </div>
               )}
+
+              <GameSection
+                tournamentId={t.id}
+                aufgebotPlayers={t.aufgebotPlayers}
+                playerMap={playerMap}
+                mode="trainer"
+              />
             </div>
           ))}
         </div>

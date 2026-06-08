@@ -7,6 +7,7 @@ import { de } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Tournament } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import GameSection from '@/components/GameSection'
 
 interface TournamentRow extends Tournament {
   registered: boolean
@@ -18,6 +19,7 @@ export default function ElternAbgeschlossenPage() {
   const [playerName, setPlayerName] = useState('')
   const [playerId, setPlayerId] = useState('')
   const [tournaments, setTournaments] = useState<TournamentRow[]>([])
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -36,8 +38,10 @@ export default function ElternAbgeschlossenPage() {
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
     ])
-    const playerMap: Record<string, string> = {}
-    for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
+    const pm: Record<string, string> = {}
+    for (const p of (playersData ?? [])) pm[p.id] = p.vorname
+    setPlayerMap(pm)
+
     const myRegisteredIds = new Set(
       (allRegData ?? []).filter((r: { player_id: string }) => r.player_id === pid).map((r: { tournament_id: string }) => r.tournament_id)
     )
@@ -47,7 +51,7 @@ export default function ElternAbgeschlossenPage() {
         return {
           ...t,
           registered: myRegisteredIds.has(t.id),
-          registeredNames: regsForTournament.map((r: { player_id: string }) => playerMap[r.player_id]).filter(Boolean).sort(),
+          registeredNames: regsForTournament.map((r: { player_id: string }) => pm[r.player_id]).filter(Boolean).sort(),
         }
       })
     )
@@ -122,6 +126,13 @@ export default function ElternAbgeschlossenPage() {
                   </div>
                 </div>
               )}
+
+              <GameSection
+                tournamentId={t.id}
+                aufgebotPlayers={[]}
+                playerMap={playerMap}
+                mode="read"
+              />
             </div>
           ))}
         </div>

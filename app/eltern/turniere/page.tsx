@@ -7,6 +7,7 @@ import { de } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Tournament } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import GameSection from '@/components/GameSection'
 
 interface TournamentRow extends Tournament {
   registered: boolean
@@ -21,6 +22,7 @@ export default function ElternTurnierePage() {
   const [playerName, setPlayerName] = useState('')
   const [playerId, setPlayerId] = useState('')
   const [tournaments, setTournaments] = useState<TournamentRow[]>([])
+  const [playerMap, setPlayerMap] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -40,8 +42,10 @@ export default function ElternTurnierePage() {
       supabase.from('players').select('id, vorname'),
       supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
-    const playerMap: Record<string, string> = {}
-    for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
+    const pm: Record<string, string> = {}
+    for (const p of (playersData ?? [])) pm[p.id] = p.vorname
+    setPlayerMap(pm)
+
     const myRegisteredIds = new Set(
       (allRegData ?? []).filter((r: { player_id: string }) => r.player_id === pid).map((r: { tournament_id: string }) => r.tournament_id)
     )
@@ -51,7 +55,7 @@ export default function ElternTurnierePage() {
     const aufgebotByTournament: Record<string, string[]> = {}
     for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
       if (!aufgebotByTournament[a.tournament_id]) aufgebotByTournament[a.tournament_id] = []
-      const name = playerMap[a.player_id]
+      const name = pm[a.player_id]
       if (name) aufgebotByTournament[a.tournament_id].push(name)
     }
     for (const tid of Object.keys(aufgebotByTournament)) aufgebotByTournament[tid].sort()
@@ -62,7 +66,7 @@ export default function ElternTurnierePage() {
           ...t,
           registered: myRegisteredIds.has(t.id),
           registering: false,
-          registeredNames: regsForTournament.map((r: { player_id: string }) => playerMap[r.player_id]).filter(Boolean).sort(),
+          registeredNames: regsForTournament.map((r: { player_id: string }) => pm[r.player_id]).filter(Boolean).sort(),
           aufgeboten: myAufgebotIds.has(t.id),
           aufgebotNames: aufgebotByTournament[t.id] ?? [],
         }
@@ -130,7 +134,7 @@ export default function ElternTurnierePage() {
       {!loading && tournaments.length > 0 && (
         <div className="space-y-3">
           {tournaments.map((t) => (
-            <TournamentCard key={t.id} t={t} playerName={playerName} onToggle={() => toggleRegistration(t)} />
+            <TournamentCard key={t.id} t={t} playerName={playerName} playerMap={playerMap} onToggle={() => toggleRegistration(t)} />
           ))}
         </div>
       )}
@@ -138,7 +142,7 @@ export default function ElternTurnierePage() {
   )
 }
 
-function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerName: string; onToggle: () => void }) {
+function TournamentCard({ t, playerName, playerMap, onToggle }: { t: TournamentRow; playerName: string; playerMap: Record<string, string>; onToggle: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const hasDetails = t.registeredNames.length > 0 || t.aufgebotNames.length > 0
 
@@ -232,6 +236,13 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
           </button>
         </div>
       )}
+
+      <GameSection
+        tournamentId={t.id}
+        aufgebotPlayers={[]}
+        playerMap={playerMap}
+        mode="read"
+      />
     </div>
   )
 }
