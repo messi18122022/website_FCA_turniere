@@ -18,6 +18,7 @@ export default function TrainerTurnierDetailPage() {
   const [registrations, setRegistrations] = useState<Player[]>([])
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState(false)
+  const [abschliessen, setAbschliessen] = useState(false)
 
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') {
@@ -69,6 +70,15 @@ export default function TrainerTurnierDetailPage() {
     router.push('/trainer/turniere')
   }
 
+  async function toggleAbgeschlossen() {
+    if (!tournament) return
+    setAbschliessen(true)
+    const newVal = !tournament.abgeschlossen
+    await supabase.from('tournaments').update({ abgeschlossen: newVal }).eq('id', id)
+    setTournament((prev) => prev ? { ...prev, abgeschlossen: newVal } : prev)
+    setAbschliessen(false)
+  }
+
   if (loading || !tournament) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -90,7 +100,14 @@ export default function TrainerTurnierDetailPage() {
 
         <div className="flex items-start justify-between gap-3 mt-3">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl font-extrabold tracking-tight">{tournament.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-2xl font-extrabold tracking-tight">{tournament.name}</h1>
+              {tournament.abgeschlossen && (
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
+                  Abgeschlossen
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-sm text-muted-foreground">
               <span>{format(new Date(tournament.date), 'EEEE, d. MMMM yyyy', { locale: de })}</span>
               {tournament.time && <span>{tournament.time.slice(0, 5)} Uhr</span>}
@@ -100,25 +117,27 @@ export default function TrainerTurnierDetailPage() {
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href={`/trainer/turnier/${id}/edit`}
-              className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-lg h-8 px-3 text-xs')}
-            >
-              Bearbeiten
-            </Link>
+            {!tournament.abgeschlossen && (
+              <Link
+                href={`/trainer/turnier/${id}/edit`}
+                className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-lg h-8 px-3 text-xs')}
+              >
+                Bearbeiten
+              </Link>
+            )}
             <button
               onClick={deleteTournament}
               disabled={deleting}
               className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-lg hover:bg-muted"
               title="Turnier löschen"
             >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6"/>
-              <path d="M19 6l-1 14H6L5 6"/>
-              <path d="M10 11v6M14 11v6"/>
-              <path d="M9 6V4h6v2"/>
-            </svg>
-          </button>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -152,16 +171,34 @@ export default function TrainerTurnierDetailPage() {
               className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3"
             >
               <span className="text-sm font-medium">{player.vorname}</span>
-              <button
-                onClick={() => removeRegistration(player.id)}
-                className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                title="Abmelden"
-              >
-                Abmelden
-              </button>
+              {!tournament.abgeschlossen && (
+                <button
+                  onClick={() => removeRegistration(player.id)}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
+                  title="Abmelden"
+                >
+                  Abmelden
+                </button>
+              )}
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Turnier abschliessen */}
+      <div className="pt-2 border-t border-border/40">
+        <button
+          onClick={toggleAbgeschlossen}
+          disabled={abschliessen}
+          className={cn(
+            'w-full py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50',
+            tournament.abgeschlossen
+              ? 'border border-border/60 text-muted-foreground hover:bg-muted'
+              : 'bg-muted text-foreground hover:bg-muted/80'
+          )}
+        >
+          {abschliessen ? '…' : tournament.abgeschlossen ? 'Wieder öffnen' : 'Turnier abschliessen'}
+        </button>
       </div>
     </div>
   )

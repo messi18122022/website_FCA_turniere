@@ -120,7 +120,7 @@ export default function ElternTurnierePage() {
     <div className="space-y-5">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight">Hallo, {playerName}!</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight">{playerName}</h1>
           <p className="text-sm text-muted-foreground mt-1">Anstehende Turniere</p>
         </div>
         <button onClick={logout} className="text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">

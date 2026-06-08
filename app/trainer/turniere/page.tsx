@@ -10,10 +10,13 @@ import { Tournament, TournamentWithCount } from '@/lib/types'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
+type Tab = 'anstehend' | 'abgeschlossen'
+
 export default function TrainerTurnierePage() {
   const router = useRouter()
   const [tournaments, setTournaments] = useState<TournamentWithCount[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<Tab>('anstehend')
 
   useEffect(() => {
     if (sessionStorage.getItem('fca_trainer') !== 'true') {
@@ -49,9 +52,9 @@ export default function TrainerTurnierePage() {
     router.push('/')
   }
 
-  const today = new Date().toISOString().split('T')[0]
-  const upcoming = tournaments.filter((t) => t.date >= today)
-  const past = tournaments.filter((t) => t.date < today)
+  const anstehend = tournaments.filter((t) => !t.abgeschlossen)
+  const abgeschlossen = tournaments.filter((t) => t.abgeschlossen)
+  const visible = activeTab === 'anstehend' ? anstehend : abgeschlossen
 
   return (
     <div className="space-y-5">
@@ -80,6 +83,38 @@ export default function TrainerTurnierePage() {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-xl bg-muted">
+        <button
+          onClick={() => setActiveTab('anstehend')}
+          className={cn(
+            'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
+            activeTab === 'anstehend'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Anstehend
+          {anstehend.length > 0 && (
+            <span className="ml-1.5 text-xs text-muted-foreground">({anstehend.length})</span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('abgeschlossen')}
+          className={cn(
+            'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
+            activeTab === 'abgeschlossen'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Abgeschlossen
+          {abgeschlossen.length > 0 && (
+            <span className="ml-1.5 text-xs text-muted-foreground">({abgeschlossen.length})</span>
+          )}
+        </button>
+      </div>
+
       {loading && (
         <div className="space-y-2">
           {[1,2,3].map((i) => <div key={i} className="h-20 rounded-xl bg-muted animate-pulse" />)}
@@ -88,21 +123,15 @@ export default function TrainerTurnierePage() {
 
       {!loading && (
         <>
-          {upcoming.length > 0 && (
+          {visible.length > 0 && (
             <div className="space-y-2">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Anstehend</h2>
-              {upcoming.map((t) => <TournamentItem key={t.id} t={t} />)}
+              {visible.map((t) => (
+                <TournamentItem key={t.id} t={t} faded={activeTab === 'abgeschlossen'} />
+              ))}
             </div>
           )}
 
-          {past.length > 0 && (
-            <div className="space-y-2">
-              <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Vergangen</h2>
-              {past.map((t) => <TournamentItem key={t.id} t={t} past />)}
-            </div>
-          )}
-
-          {tournaments.length === 0 && (
+          {visible.length === 0 && activeTab === 'anstehend' && (
             <div className="text-center py-16 space-y-2">
               <p className="text-4xl">🏆</p>
               <p className="text-muted-foreground text-sm">Noch keine Turniere erfasst.</p>
@@ -111,19 +140,26 @@ export default function TrainerTurnierePage() {
               </Link>
             </div>
           )}
+
+          {visible.length === 0 && activeTab === 'abgeschlossen' && (
+            <div className="text-center py-16 space-y-2">
+              <p className="text-4xl">✅</p>
+              <p className="text-muted-foreground text-sm">Noch keine abgeschlossenen Turniere.</p>
+            </div>
+          )}
         </>
       )}
     </div>
   )
 }
 
-function TournamentItem({ t, past }: { t: TournamentWithCount; past?: boolean }) {
+function TournamentItem({ t, faded }: { t: TournamentWithCount; faded?: boolean }) {
   return (
     <Link
       href={`/trainer/turnier/${t.id}`}
       className={cn(
         'flex items-center justify-between gap-3 rounded-xl border px-4 py-3.5 hover:border-border transition-colors',
-        past ? 'border-border/40 opacity-60' : 'border-border/60'
+        faded ? 'border-border/40 opacity-60' : 'border-border/60'
       )}
     >
       <div className="flex-1 min-w-0 space-y-1">

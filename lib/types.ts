@@ -19,6 +19,7 @@ export interface Tournament {
   maps_url: string | null
   spielplan_url: string | null
   notes: string | null
+  abgeschlossen: boolean
   created_at: string
 }
 
