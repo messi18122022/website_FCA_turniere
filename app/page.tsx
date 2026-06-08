@@ -16,7 +16,6 @@ export default function LandingPage() {
           <span className="text-5xl">👨‍👩‍👦</span>
           <div className="text-center">
             <div className="text-lg font-bold">Ich bin Elternteil</div>
-            <div className="text-sm text-muted-foreground mt-1">Kind an- oder abmelden</div>
           </div>
         </Link>
 
@@ -27,7 +26,6 @@ export default function LandingPage() {
           <span className="text-5xl">📋</span>
           <div className="text-center">
             <div className="text-lg font-bold">Ich bin Trainer</div>
-            <div className="text-sm text-muted-foreground mt-1">Turniere verwalten</div>
           </div>
         </Link>
       </div>

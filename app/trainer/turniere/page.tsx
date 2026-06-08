@@ -183,8 +183,8 @@ function TournamentCard({ t }: { t: TournamentRow }) {
                   <p className="text-xs text-muted-foreground">Noch kein Aufgebot</p>
                 )}
               </div>
-              <Link href={`/trainer/turnier/${t.id}/aufgebot`} className="text-xs font-semibold text-primary shrink-0 hover:underline">
-                {t.aufgebotNames.length > 0 ? 'Bearbeiten →' : 'Erstellen →'}
+              <Link href={`/trainer/turnier/${t.id}/aufgebot`} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/50 transition-all shrink-0">
+                {t.aufgebotNames.length > 0 ? 'Bearbeiten' : 'Erstellen'}
               </Link>
             </div>
           )}
