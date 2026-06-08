@@ -144,10 +144,12 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
             disabled={t.registering}
             className={cn(
               'rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50',
-              t.registered ? 'bg-primary/15 text-primary hover:bg-primary/25' : 'bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground'
+              t.registered
+                ? 'bg-red-500/10 text-red-500 hover:bg-red-500/20'
+                : 'bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground'
             )}
           >
-            {t.registering ? '…' : t.registered ? '✓ Angemeldet' : 'Anmelden'}
+            {t.registering ? '…' : t.registered ? 'Abmelden' : 'Anmelden'}
           </button>
           {t.maps_url && (
             <a href={t.maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 hover:border-border hover:bg-muted transition-colors">
