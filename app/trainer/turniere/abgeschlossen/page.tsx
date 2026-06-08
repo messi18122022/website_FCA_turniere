@@ -7,6 +7,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
 import { Tournament } from '@/lib/types'
+import { cn } from '@/lib/utils'
 import GameSection, { AufgebotPlayer } from '@/components/GameSection'
 
 interface TournamentRow extends Tournament {
@@ -100,47 +101,68 @@ export default function TrainerAbgeschlossenPage() {
       {!loading && tournaments.length > 0 && (
         <div className="space-y-3">
           {tournaments.map((t) => (
-            <div key={t.id} className="rounded-xl border border-border/40 px-4 py-4 opacity-70">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <span className="text-base font-bold">{t.name}</span>
-                  <div className="space-y-0.5 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-1.5"><span>📅</span><span>{format(new Date(t.date), 'EEEE, d. MMMM yyyy', { locale: de })}</span></div>
-                    {t.time && <div className="flex items-center gap-1.5"><span>🕐</span><span>{t.time.slice(0, 5)} Uhr</span></div>}
-                    {t.location && <div className="flex items-center gap-1.5"><span>📍</span><span>{t.location}</span></div>}
-                    {t.belag && <div className="flex items-center gap-1.5"><span>{t.belag === 'Halle' ? '🏟' : '🌱'}</span><span>{t.belag}</span></div>}
-                    {t.modus && <div className="flex items-center gap-1.5"><span>⚽</span><span>{t.modus}</span></div>}
-                  </div>
-                  {t.notes && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.notes}</p>}
-                </div>
-                <Link href={`/trainer/turnier/${t.id}/edit`} className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">
-                  Bearbeiten
-                </Link>
-              </div>
-
-              {t.registeredNames.length > 0 && (
-                <div className="mt-3 pt-3 border-t border-border/40">
-                  <p className="text-xs text-muted-foreground mb-1.5">
-                    {t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} waren dabei
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {t.registeredNames.map((name) => (
-                      <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <GameSection
-                tournamentId={t.id}
-                aufgebotPlayers={t.aufgebotPlayers}
-                playerMap={playerMap}
-                mode="trainer"
-              />
-            </div>
+            <AbgeschlossenCard key={t.id} t={t} playerMap={playerMap} />
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Record<string, string> }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div className="rounded-xl border border-border/40 px-4 py-4 opacity-70">
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0 space-y-1.5">
+          <span className="text-base font-bold">{t.name}</span>
+          <div className="space-y-0.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-1.5"><span>📅</span><span>{format(new Date(t.date), 'EEEE, d. MMMM yyyy', { locale: de })}</span></div>
+            {t.time && <div className="flex items-center gap-1.5"><span>🕐</span><span>{t.time.slice(0, 5)} Uhr</span></div>}
+            {t.location && <div className="flex items-center gap-1.5"><span>📍</span><span>{t.location}</span></div>}
+            {t.belag && <div className="flex items-center gap-1.5"><span>{t.belag === 'Halle' ? '🏟' : '🌱'}</span><span>{t.belag}</span></div>}
+            {t.modus && <div className="flex items-center gap-1.5"><span>⚽</span><span>{t.modus}</span></div>}
+          </div>
+          {t.notes && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.notes}</p>}
+        </div>
+        <Link href={`/trainer/turnier/${t.id}/edit`} className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">
+          Bearbeiten
+        </Link>
+      </div>
+
+      <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
+        {t.registeredNames.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <p className="text-xs text-muted-foreground mb-1.5">
+              {t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} waren dabei
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {t.registeredNames.map((name) => (
+                <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        <GameSection
+          tournamentId={t.id}
+          aufgebotPlayers={t.aufgebotPlayers}
+          playerMap={playerMap}
+          mode="trainer"
+        />
+      </div>
+
+      <div className="mt-3 pt-3 border-t border-border/40 flex justify-center">
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
+        >
+          <span>{expanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

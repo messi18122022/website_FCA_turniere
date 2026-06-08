@@ -144,12 +144,6 @@ export default function ElternTurnierePage() {
 
 function TournamentCard({ t, playerName, playerMap, onToggle }: { t: TournamentRow; playerName: string; playerMap: Record<string, string>; onToggle: () => void }) {
   const [expanded, setExpanded] = useState(false)
-  const hasDetails = t.registeredNames.length > 0 || t.aufgebotNames.length > 0
-
-  const summary = [
-    t.registeredNames.length > 0 && `Angemeldet: ${t.registeredNames.length}`,
-    t.aufgebotNames.length > 0 && `Aufgebot: ${t.aufgebotNames.length}`,
-  ].filter(Boolean).join(' · ')
 
   return (
     <div className={cn('rounded-xl border px-4 py-4 transition-colors', t.registered ? 'border-primary/50 bg-primary/5' : 'border-border/60')}>
@@ -198,51 +192,46 @@ function TournamentCard({ t, playerName, playerMap, onToggle }: { t: TournamentR
         </div>
       </div>
 
-      {hasDetails && (
-        <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0')}>
-          {t.registeredNames.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/40">
-              <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
-              <div className="flex flex-wrap gap-1.5">
-                {t.registeredNames.map((name) => (
-                  <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>{name}</span>
-                ))}
-              </div>
+      <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
+        {t.registeredNames.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
+            <div className="flex flex-wrap gap-1.5">
+              {t.registeredNames.map((name) => (
+                <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>{name}</span>
+              ))}
             </div>
-          )}
-          {t.aufgebotNames.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/40">
-              <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} {t.aufgebotNames.length === 1 ? 'Kind' : 'Kinder'}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {t.aufgebotNames.map((name) => (
-                  <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-green-500/20 text-green-600' : 'bg-primary/15 text-primary')}>{name}</span>
-                ))}
-              </div>
+          </div>
+        )}
+        {t.aufgebotNames.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} {t.aufgebotNames.length === 1 ? 'Kind' : 'Kinder'}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {t.aufgebotNames.map((name) => (
+                <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-green-500/20 text-green-600' : 'bg-primary/15 text-primary')}>{name}</span>
+              ))}
             </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+        <GameSection
+          tournamentId={t.id}
+          aufgebotPlayers={[]}
+          playerMap={playerMap}
+          mode="read"
+        />
+      </div>
 
-      {hasDetails && (
-        <div className="mt-3 pt-3 border-t border-border/40 flex justify-center">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
-          >
-            <span>{expanded ? 'Weniger' : summary}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <GameSection
-        tournamentId={t.id}
-        aufgebotPlayers={[]}
-        playerMap={playerMap}
-        mode="read"
-      />
+      <div className="mt-3 pt-3 border-t border-border/40 flex justify-center">
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
+        >
+          <span>{expanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }

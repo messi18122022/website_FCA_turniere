@@ -113,12 +113,13 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
   async function saveEdit() {
     if (!editId) return
     setSaving(true)
-    await supabase.from('tournament_games').update({
+    setError(null)
+    const { error: err } = await supabase.from('tournament_games').update({
       opponent: editOpponent.trim() || 'Gegner',
       goals_fca: editFca,
       goals_opponent: editOppGoals,
-      own_goals: editOwnGoals,
     }).eq('id', editId)
+    if (err) { setError(err.message); setSaving(false); return }
     await supabase.from('game_goals').delete().eq('game_id', editId)
     const inserts = Object.entries(editPlayerGoals)
       .filter(([, c]) => c > 0)
@@ -155,55 +156,40 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
     await reload()
   }
 
-  function scorerText(gameId: string, ownGoals: number): string {
+  function scorerText(gameId: string): string {
     const entries = goals.filter(g => g.game_id === gameId)
-    const parts: string[] = []
-    for (const e of entries) {
-      const name = playerMap[e.player_id] ?? '?'
-      parts.push(e.goals_count > 1 ? `${name} (${e.goals_count})` : name)
-    }
-    if (ownGoals > 0) parts.push(ownGoals > 1 ? `Eigentor (${ownGoals})` : 'Eigentor')
-    return parts.join(', ')
+    return entries
+      .map(e => {
+        const name = playerMap[e.player_id] ?? '?'
+        return e.goals_count > 1 ? `${name} (${e.goals_count})` : name
+      })
+      .join(', ')
   }
 
-  if (mode === 'read' && (!loaded || games.length === 0)) return null
+  if (mode === 'read' && loaded && games.length === 0) return null
 
   const hasAufgebot = aufgebotPlayers.length > 0
   const isInteracting = adding || editId !== null
-  const [expanded, setExpanded] = useState(false)
 
   return (
     <div className="mt-3 pt-3 border-t border-border/40">
       {error && (
         <p className="text-xs text-red-500 mb-2 bg-red-500/10 rounded-lg px-2 py-1">{error}</p>
       )}
-      <div className="flex justify-center">
-        <button
-          onClick={() => setExpanded(e => !e)}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
-        >
-          <span>{expanded ? 'Weniger' : `Spiele${games.length > 0 ? ` · ${games.length}` : ''}`}</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
-            <polyline points="6 9 12 15 18 9"/>
-          </svg>
-        </button>
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Spiele</p>
+        {mode === 'trainer' && !isInteracting && (
+          <button
+            onClick={() => setAdding(true)}
+            className="w-6 h-6 rounded-full bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors flex items-center justify-center"
+            aria-label="Spiel hinzufügen"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+          </button>
+        )}
       </div>
-
-      <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0')}>
-        <div className="pt-3 flex items-center justify-between mb-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Spiele</p>
-          {mode === 'trainer' && !isInteracting && (
-            <button
-              onClick={() => setAdding(true)}
-              className="w-6 h-6 rounded-full bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors flex items-center justify-center"
-              aria-label="Spiel hinzufügen"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-            </button>
-          )}
-        </div>
 
       <div className="space-y-2">
         {games.map(game => (
@@ -281,19 +267,12 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
                     Löschen
                   </button>
                   <div className="flex gap-1.5">
-                    <button
-                      onClick={cancelEdit}
-                      className="h-7 w-7 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center justify-center"
-                    >
+                    <button onClick={cancelEdit} className="h-7 w-7 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                       </svg>
                     </button>
-                    <button
-                      onClick={saveEdit}
-                      disabled={saving}
-                      className="h-7 w-7 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors disabled:opacity-50 flex items-center justify-center"
-                    >
+                    <button onClick={saveEdit} disabled={saving} className="h-7 w-7 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors disabled:opacity-50 flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12"/>
                       </svg>
@@ -310,15 +289,12 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
                     <span className="text-muted-foreground truncate">{game.opponent}</span>
                   </div>
                   {(() => {
-                    const t = scorerText(game.id, game.own_goals ?? 0)
+                    const t = scorerText(game.id)
                     return t ? <p className="text-xs text-muted-foreground mt-0.5">{t}</p> : null
                   })()}
                 </div>
                 {mode === 'trainer' && !isInteracting && (
-                  <button
-                    onClick={() => startEdit(game)}
-                    className="shrink-0 text-xs px-2.5 py-1 rounded-lg border border-border/60 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/50 transition-all"
-                  >
+                  <button onClick={() => startEdit(game)} className="shrink-0 text-xs px-2.5 py-1 rounded-lg border border-border/60 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/50 transition-all">
                     Bearbeiten
                   </button>
                 )}
@@ -332,40 +308,29 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold text-primary shrink-0">FCA</span>
               <input
-                type="number" min={0}
-                value={addFca}
+                type="number" min={0} value={addFca}
                 onChange={e => setAddFca(Math.max(0, parseInt(e.target.value) || 0))}
                 className="w-10 h-8 rounded-md border border-border bg-background text-center text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <span className="text-sm font-bold shrink-0">:</span>
               <input
-                type="number" min={0}
-                value={addOpp}
+                type="number" min={0} value={addOpp}
                 onChange={e => setAddOpp(Math.max(0, parseInt(e.target.value) || 0))}
                 className="w-10 h-8 rounded-md border border-border bg-background text-center text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
               />
               <input
-                type="text"
-                value={addOpponent}
+                type="text" value={addOpponent}
                 onChange={e => setAddOpponent(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') addGame() }}
-                placeholder="Gegner"
-                autoFocus
+                placeholder="Gegner" autoFocus
                 className="flex-1 min-w-0 h-8 rounded-md border border-border bg-background px-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
               />
-              <button
-                onClick={() => { setAdding(false); setAddOpponent(''); setAddFca(0); setAddOpp(0) }}
-                className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center justify-center shrink-0"
-              >
+              <button onClick={() => { setAdding(false); setAddOpponent(''); setAddFca(0); setAddOpp(0) }} className="w-8 h-8 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80 transition-colors flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
                 </svg>
               </button>
-              <button
-                onClick={addGame}
-                disabled={saving || !addOpponent.trim()}
-                className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors disabled:opacity-50 flex items-center justify-center shrink-0"
-              >
+              <button onClick={addGame} disabled={saving || !addOpponent.trim()} className="w-8 h-8 rounded-lg bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors disabled:opacity-50 flex items-center justify-center shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
@@ -377,7 +342,6 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
         {loaded && games.length === 0 && !adding && mode === 'trainer' && (
           <p className="text-xs text-muted-foreground">Noch keine Spiele erfasst.</p>
         )}
-      </div>
       </div>
     </div>
   )

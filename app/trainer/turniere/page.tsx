@@ -121,13 +121,6 @@ export default function TrainerTurnierePage() {
 
 function TournamentCard({ t, playerMap }: { t: TournamentRow; playerMap: Record<string, string> }) {
   const [expanded, setExpanded] = useState(false)
-  const hasDetails = t.registeredNames.length > 0
-
-  const summary = [
-    t.registeredNames.length > 0 && `Angemeldet: ${t.registeredNames.length}`,
-    t.aufgebotNames.length > 0 && `Aufgebot: ${t.aufgebotNames.length}`,
-    t.registeredNames.length > 0 && t.aufgebotNames.length === 0 && 'Noch kein Aufgebot',
-  ].filter(Boolean).join(' · ')
 
   return (
     <div className="rounded-xl border border-border/60 px-4 py-4 transition-colors">
@@ -162,62 +155,55 @@ function TournamentCard({ t, playerMap }: { t: TournamentRow; playerMap: Record<
         </div>
       </div>
 
-      {hasDetails && (
-        <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0')}>
-          {t.registeredNames.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/40">
-              <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
-              <div className="flex flex-wrap gap-1.5">
-                {t.registeredNames.map((name) => (
-                  <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
-                ))}
-              </div>
+      <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
+        {t.registeredNames.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
+            <div className="flex flex-wrap gap-1.5">
+              {t.registeredNames.map((name) => (
+                <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
+              ))}
             </div>
-          )}
-          {t.registeredNames.length > 0 && (
-            <div className="mt-3 pt-3 border-t border-border/40 flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                {t.aufgebotNames.length > 0 ? (
-                  <>
-                    <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} Kinder</p>
-                    <div className="flex flex-wrap gap-1.5">
-                      {t.aufgebotNames.map((name) => (
-                        <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-primary/15 text-primary">{name}</span>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-xs text-muted-foreground">Noch kein Aufgebot</p>
-                )}
-              </div>
-              <Link href={`/trainer/turnier/${t.id}/aufgebot`} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/50 transition-all shrink-0">
-                {t.aufgebotNames.length > 0 ? 'Bearbeiten' : 'Erstellen'}
-              </Link>
-            </div>
-          )}
+          </div>
+        )}
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {t.aufgebotNames.length > 0 ? (
+              <>
+                <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} Kinder</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {t.aufgebotNames.map((name) => (
+                    <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-primary/15 text-primary">{name}</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">Noch kein Aufgebot</p>
+            )}
+          </div>
+          <Link href={`/trainer/turnier/${t.id}/aufgebot`} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 text-muted-foreground hover:border-border hover:text-foreground hover:bg-muted/50 transition-all shrink-0">
+            {t.aufgebotNames.length > 0 ? 'Bearbeiten' : 'Erstellen'}
+          </Link>
         </div>
-      )}
+        <GameSection
+          tournamentId={t.id}
+          aufgebotPlayers={t.aufgebotPlayers}
+          playerMap={playerMap}
+          mode="trainer"
+        />
+      </div>
 
-      {hasDetails && (
-        <div className="mt-3 pt-3 border-t border-border/40 flex justify-center">
-          <button
-            onClick={() => setExpanded(e => !e)}
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
-          >
-            <span>{expanded ? 'Weniger' : summary}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </button>
-        </div>
-      )}
-
-      <GameSection
-        tournamentId={t.id}
-        aufgebotPlayers={t.aufgebotPlayers}
-        playerMap={playerMap}
-        mode="trainer"
-      />
+      <div className="mt-3 pt-3 border-t border-border/40 flex justify-center">
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
+        >
+          <span>{expanded ? 'Weniger anzeigen' : 'Mehr anzeigen'}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+      </div>
     </div>
   )
 }
