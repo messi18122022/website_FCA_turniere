@@ -12,6 +12,8 @@ import GameSection from '@/components/GameSection'
 interface TournamentRow extends Tournament {
   registered: boolean
   registeredNames: string[]
+  aufgeboten: boolean
+  aufgebotNames: string[]
 }
 
 export default function ElternAbgeschlossenPage() {
@@ -33,10 +35,11 @@ export default function ElternAbgeschlossenPage() {
 
   async function loadTournaments(pid: string) {
     setLoading(true)
-    const [{ data: tourData }, { data: allRegData }, { data: playersData }] = await Promise.all([
+    const [{ data: tourData }, { data: allRegData }, { data: playersData }, { data: aufgebotData }] = await Promise.all([
       supabase.from('tournaments').select('*').eq('abgeschlossen', true).order('date', { ascending: false }),
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
+      supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
     const pm: Record<string, string> = {}
     for (const p of (playersData ?? [])) pm[p.id] = p.vorname
@@ -45,6 +48,17 @@ export default function ElternAbgeschlossenPage() {
     const myRegisteredIds = new Set(
       (allRegData ?? []).filter((r: { player_id: string }) => r.player_id === pid).map((r: { tournament_id: string }) => r.tournament_id)
     )
+    const myAufgebotIds = new Set(
+      (aufgebotData ?? []).filter((a: { player_id: string }) => a.player_id === pid).map((a: { tournament_id: string }) => a.tournament_id)
+    )
+    const aufgebotByTournament: Record<string, string[]> = {}
+    for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
+      if (!aufgebotByTournament[a.tournament_id]) aufgebotByTournament[a.tournament_id] = []
+      const name = pm[a.player_id]
+      if (name) aufgebotByTournament[a.tournament_id].push(name)
+    }
+    for (const tid of Object.keys(aufgebotByTournament)) aufgebotByTournament[tid].sort()
+
     setTournaments(
       (tourData ?? []).map((t: Tournament) => {
         const regsForTournament = (allRegData ?? []).filter((r: { tournament_id: string }) => r.tournament_id === t.id)
@@ -52,6 +66,8 @@ export default function ElternAbgeschlossenPage() {
           ...t,
           registered: myRegisteredIds.has(t.id),
           registeredNames: regsForTournament.map((r: { player_id: string }) => pm[r.player_id]).filter(Boolean).sort(),
+          aufgeboten: myAufgebotIds.has(t.id),
+          aufgebotNames: aufgebotByTournament[t.id] ?? [],
         }
       })
     )
@@ -130,8 +146,11 @@ function AbgeschlossenCard({ t, playerName, playerMap }: { t: TournamentRow; pla
               {t.rang}. / {t.total_teams}
             </span>
           )}
-          {t.registered && (
-            <span className="rounded-xl px-4 py-2 text-sm font-semibold bg-primary/15 text-primary">✓ War dabei</span>
+          {t.aufgeboten && (
+            <span className="rounded-xl px-4 py-2 text-sm font-semibold bg-green-500/10 text-green-600">✓ Aufgeboten</span>
+          )}
+          {t.registered && !t.aufgeboten && (
+            <span className="rounded-xl px-4 py-2 text-sm font-semibold bg-primary/15 text-primary">✓ Angemeldet</span>
           )}
         </div>
       </div>
@@ -139,10 +158,20 @@ function AbgeschlossenCard({ t, playerName, playerMap }: { t: TournamentRow; pla
       <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
         {t.registeredNames.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border/40">
-            <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} waren dabei</p>
+            <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
             <div className="flex flex-wrap gap-1.5">
               {t.registeredNames.map((name) => (
                 <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground')}>{name}</span>
+              ))}
+            </div>
+          </div>
+        )}
+        {t.aufgebotNames.length > 0 && (
+          <div className="mt-3 pt-3 border-t border-border/40">
+            <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} {t.aufgebotNames.length === 1 ? 'Kind' : 'Kinder'}</p>
+            <div className="flex flex-wrap gap-1.5">
+              {t.aufgebotNames.map((name) => (
+                <span key={name} className={cn('text-xs px-2 py-1 rounded-lg font-medium', name === playerName ? 'bg-green-500/20 text-green-600' : 'bg-primary/15 text-primary')}>{name}</span>
               ))}
             </div>
           </div>

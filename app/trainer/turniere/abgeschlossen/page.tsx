@@ -13,6 +13,7 @@ import GameSection, { AufgebotPlayer } from '@/components/GameSection'
 interface TournamentRow extends Tournament {
   registration_count: number
   registeredNames: string[]
+  aufgebotNames: string[]
   aufgebotPlayers: AufgebotPlayer[]
 }
 
@@ -63,6 +64,7 @@ export default function TrainerAbgeschlossenPage() {
       ...t,
       registration_count: counts[t.id] ?? 0,
       registeredNames: namesByTournament[t.id] ?? [],
+      aufgebotNames: (aufgebotPlayersByTournament[t.id] ?? []).map(p => p.vorname),
       aufgebotPlayers: aufgebotPlayersByTournament[t.id] ?? [],
     })))
     setLoading(false)
@@ -141,9 +143,7 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
       <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
         {t.registeredNames.length > 0 && (
           <div className="mt-3 pt-3 border-t border-border/40">
-            <p className="text-xs text-muted-foreground mb-1.5">
-              {t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} waren dabei
-            </p>
+            <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
             <div className="flex flex-wrap gap-1.5">
               {t.registeredNames.map((name) => (
                 <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
@@ -151,6 +151,22 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
             </div>
           </div>
         )}
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {t.aufgebotNames.length > 0 ? (
+              <>
+                <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} Kinder</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {t.aufgebotNames.map((name) => (
+                    <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-primary/15 text-primary">{name}</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">Kein Aufgebot erfasst</p>
+            )}
+          </div>
+        </div>
         <GameSection
           tournamentId={t.id}
           aufgebotPlayers={t.aufgebotPlayers}
