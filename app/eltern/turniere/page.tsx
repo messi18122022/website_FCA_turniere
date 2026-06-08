@@ -143,7 +143,7 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
   const hasDetails = t.registeredNames.length > 0 || t.aufgebotNames.length > 0
 
   const summary = [
-    t.registeredNames.length > 0 && `${t.registeredNames.length} angemeldet`,
+    t.registeredNames.length > 0 && `Angemeldet: ${t.registeredNames.length}`,
     t.aufgebotNames.length > 0 && `Aufgebot: ${t.aufgebotNames.length}`,
   ].filter(Boolean).join(' · ')
 
