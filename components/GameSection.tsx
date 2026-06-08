@@ -9,7 +9,7 @@ interface Game {
   opponent: string
   goals_fca: number
   goals_opponent: number
-  own_goals: number
+  own_goals?: number
 }
 
 interface GoalEntry {
@@ -39,6 +39,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
   const [addFca, setAddFca] = useState(0)
   const [addOpp, setAddOpp] = useState(0)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
   const [editOpponent, setEditOpponent] = useState('')
   const [editFca, setEditFca] = useState(0)
@@ -50,7 +51,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
     async function load() {
       const { data: gData } = await supabase
         .from('tournament_games')
-        .select('id, opponent, goals_fca, goals_opponent, own_goals')
+        .select('id, opponent, goals_fca, goals_opponent')
         .eq('tournament_id', tournamentId)
         .order('created_at')
       const gs = (gData ?? []) as Game[]
@@ -70,7 +71,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
   async function reload() {
     const { data: gData } = await supabase
       .from('tournament_games')
-      .select('id, opponent, goals_fca, goals_opponent, own_goals')
+      .select('id, opponent, goals_fca, goals_opponent')
       .eq('tournament_id', tournamentId)
       .order('created_at')
     const gs = (gData ?? []) as Game[]
@@ -96,7 +97,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
     setEditOpponent(game.opponent)
     setEditFca(game.goals_fca)
     setEditOppGoals(game.goals_opponent)
-    setEditOwnGoals(game.own_goals)
+    setEditOwnGoals(game.own_goals ?? 0)
     setEditPlayerGoals(pg)
   }
 
@@ -138,14 +139,15 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
   async function addGame() {
     if (!addOpponent.trim()) return
     setSaving(true)
-    await supabase.from('tournament_games').insert({
+    setError(null)
+    const { error: err } = await supabase.from('tournament_games').insert({
       tournament_id: tournamentId,
       opponent: addOpponent.trim(),
       goals_fca: addFca,
       goals_opponent: addOpp,
-      own_goals: 0,
     })
     setSaving(false)
+    if (err) { setError(err.message); return }
     setAdding(false)
     setAddOpponent('')
     setAddFca(0)
@@ -171,6 +173,9 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
 
   return (
     <div className="mt-3 pt-3 border-t border-border/40">
+      {error && (
+        <p className="text-xs text-red-500 mb-2 bg-red-500/10 rounded-lg px-2 py-1">{error}</p>
+      )}
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Spiele</p>
         {mode === 'trainer' && !isInteracting && (
@@ -291,7 +296,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
                     <span className="text-muted-foreground truncate">{game.opponent}</span>
                   </div>
                   {(() => {
-                    const t = scorerText(game.id, game.own_goals)
+                    const t = scorerText(game.id, game.own_goals ?? 0)
                     return t ? <p className="text-xs text-muted-foreground mt-0.5">{t}</p> : null
                   })()}
                 </div>
