@@ -130,7 +130,12 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
         </div>
         <div className="shrink-0 flex flex-col items-end gap-1.5">
           {t.rang != null && t.total_teams != null && (
-            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/15 text-primary">
+            <span className={cn('text-xs font-semibold px-2.5 py-1 rounded-lg',
+              t.rang === 1 ? 'bg-yellow-400/20 text-yellow-600' :
+              t.rang === 2 ? 'bg-slate-400/20 text-slate-500' :
+              t.rang === 3 ? 'bg-orange-500/20 text-orange-600' :
+              'bg-primary/15 text-primary'
+            )}>
               {t.rang}/{t.total_teams}
             </span>
           )}
