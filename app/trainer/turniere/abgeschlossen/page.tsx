@@ -113,7 +113,7 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-xl border border-border/40 px-4 py-4 opacity-70">
+    <div className="rounded-xl border border-border/60 px-4 py-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0 space-y-1.5">
           <span className="text-base font-bold">{t.name}</span>
