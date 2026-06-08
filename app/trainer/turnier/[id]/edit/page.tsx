@@ -177,33 +177,48 @@ export default function EditTournamentPage() {
           <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
 
-        <Button type="submit" className="w-full h-12 rounded-xl" disabled={saving || !form.name || !form.date}>
-          {saving ? 'Speichern…' : 'Änderungen speichern'}
-        </Button>
-      </form>
+        <div className="flex items-center gap-3 pt-2 border-t border-border/40">
+          <button
+            type="button"
+            onClick={deleteTournament}
+            disabled={deleting}
+            title="Turnier löschen"
+            className="h-12 w-12 rounded-xl bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors disabled:opacity-50 shrink-0"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              <path d="M10 11v6"/><path d="M14 11v6"/>
+              <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+            </svg>
+          </button>
 
-      <div className="flex items-center gap-3 pt-2 border-t border-border/40">
-        <button
-          onClick={deleteTournament}
-          disabled={deleting}
-          title="Turnier löschen"
-          className="h-12 w-12 rounded-xl bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors disabled:opacity-50 shrink-0"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="3 6 5 6 21 6"/>
-            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-            <path d="M10 11v6"/><path d="M14 11v6"/>
-            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-          </svg>
-        </button>
-        <button
-          onClick={toggleAbgeschlossen}
-          disabled={toggling}
-          className="flex-1 py-3 rounded-xl text-sm font-semibold border border-border/60 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
-        >
-          {toggling ? '…' : abgeschlossen ? 'Wieder öffnen' : 'Turnier abschliessen'}
-        </button>
-      </div>
+          <button
+            type="button"
+            onClick={toggleAbgeschlossen}
+            disabled={toggling || (!abgeschlossen && form.date > new Date().toISOString().split('T')[0])}
+            className="flex-1 h-12 rounded-xl text-sm font-semibold border border-border/60 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            {toggling ? '…' : abgeschlossen ? 'Wieder öffnen' : 'Turnier abschliessen'}
+          </button>
+
+          <button
+            type="submit"
+            disabled={saving || !form.name || !form.date}
+            className="h-12 w-12 rounded-xl bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-colors disabled:opacity-50 shrink-0"
+          >
+            {saving ? (
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="animate-spin opacity-60">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            )}
+          </button>
+        </div>
+      </form>
     </div>
   )
 }
