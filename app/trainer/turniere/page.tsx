@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils'
 interface TournamentRow extends Tournament {
   registration_count: number
   registeredNames: string[]
+  aufgebotNames: string[]
 }
 
 export default function TrainerTurnierePage() {
@@ -27,11 +28,13 @@ export default function TrainerTurnierePage() {
 
   async function load() {
     setLoading(true)
-    const [{ data: tourData }, { data: regData }, { data: playersData }] = await Promise.all([
+    const [{ data: tourData }, { data: regData }, { data: playersData }, { data: aufgebotData }] = await Promise.all([
       supabase.from('tournaments').select('*').eq('abgeschlossen', false).order('date', { ascending: true }),
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
+      supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
+
     const playerMap: Record<string, string> = {}
     for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
 
@@ -45,10 +48,19 @@ export default function TrainerTurnierePage() {
     }
     for (const tid of Object.keys(namesByTournament)) namesByTournament[tid].sort()
 
+    const aufgebotByTournament: Record<string, string[]> = {}
+    for (const a of (aufgebotData ?? []) as { tournament_id: string; player_id: string }[]) {
+      if (!aufgebotByTournament[a.tournament_id]) aufgebotByTournament[a.tournament_id] = []
+      const name = playerMap[a.player_id]
+      if (name) aufgebotByTournament[a.tournament_id].push(name)
+    }
+    for (const tid of Object.keys(aufgebotByTournament)) aufgebotByTournament[tid].sort()
+
     setTournaments((tourData ?? []).map((t: Tournament) => ({
       ...t,
       registration_count: counts[t.id] ?? 0,
       registeredNames: namesByTournament[t.id] ?? [],
+      aufgebotNames: aufgebotByTournament[t.id] ?? [],
     })))
     setLoading(false)
   }
@@ -80,7 +92,7 @@ export default function TrainerTurnierePage() {
       </div>
 
       {loading && (
-        <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="h-32 rounded-xl bg-muted animate-pulse" />)}</div>
+        <div className="space-y-3">{[1,2,3].map((i) => <div key={i} className="h-36 rounded-xl bg-muted animate-pulse" />)}</div>
       )}
 
       {!loading && tournaments.length === 0 && (
@@ -100,9 +112,9 @@ export default function TrainerTurnierePage() {
   )
 }
 
-function TournamentCard({ t, faded }: { t: TournamentRow; faded?: boolean }) {
+function TournamentCard({ t }: { t: TournamentRow }) {
   return (
-    <div className={cn('rounded-xl border px-4 py-4 transition-colors', faded ? 'border-border/40 opacity-70' : 'border-border/60')}>
+    <div className="rounded-xl border border-border/60 px-4 py-4 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0 space-y-1.5">
           <span className="text-base font-bold">{t.name}</span>
@@ -136,14 +148,34 @@ function TournamentCard({ t, faded }: { t: TournamentRow; faded?: boolean }) {
 
       {t.registeredNames.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border/40">
-          <p className="text-xs text-muted-foreground mb-1.5">
-            {t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet
-          </p>
+          <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
           <div className="flex flex-wrap gap-1.5">
             {t.registeredNames.map((name) => (
               <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-muted text-muted-foreground">{name}</span>
             ))}
           </div>
+        </div>
+      )}
+
+      {t.registeredNames.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-border/40 flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            {t.aufgebotNames.length > 0 ? (
+              <>
+                <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} Kinder</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {t.aufgebotNames.map((name) => (
+                    <span key={name} className="text-xs px-2 py-1 rounded-lg font-medium bg-primary/15 text-primary">{name}</span>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground">Noch kein Aufgebot</p>
+            )}
+          </div>
+          <Link href={`/trainer/turnier/${t.id}/aufgebot`} className="text-xs font-semibold text-primary shrink-0 hover:underline">
+            {t.aufgebotNames.length > 0 ? 'Bearbeiten →' : 'Erstellen →'}
+          </Link>
         </div>
       )}
     </div>

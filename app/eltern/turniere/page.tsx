@@ -12,6 +12,7 @@ interface TournamentRow extends Tournament {
   registered: boolean
   registering: boolean
   registeredNames: string[]
+  aufgeboten: boolean
 }
 
 export default function ElternTurnierePage() {
@@ -32,15 +33,19 @@ export default function ElternTurnierePage() {
 
   async function loadTournaments(pid: string) {
     setLoading(true)
-    const [{ data: tourData }, { data: allRegData }, { data: playersData }] = await Promise.all([
+    const [{ data: tourData }, { data: allRegData }, { data: playersData }, { data: aufgebotData }] = await Promise.all([
       supabase.from('tournaments').select('*').eq('abgeschlossen', false).order('date', { ascending: true }),
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
+      supabase.from('tournament_aufgebot').select('tournament_id, player_id'),
     ])
     const playerMap: Record<string, string> = {}
     for (const p of (playersData ?? [])) playerMap[p.id] = p.vorname
     const myRegisteredIds = new Set(
       (allRegData ?? []).filter((r: { player_id: string }) => r.player_id === pid).map((r: { tournament_id: string }) => r.tournament_id)
+    )
+    const myAufgebotIds = new Set(
+      (aufgebotData ?? []).filter((a: { player_id: string }) => a.player_id === pid).map((a: { tournament_id: string }) => a.tournament_id)
     )
     setTournaments(
       (tourData ?? []).map((t: Tournament) => {
@@ -50,6 +55,7 @@ export default function ElternTurnierePage() {
           registered: myRegisteredIds.has(t.id),
           registering: false,
           registeredNames: regsForTournament.map((r: { player_id: string }) => playerMap[r.player_id]).filter(Boolean).sort(),
+          aufgeboten: myAufgebotIds.has(t.id),
         }
       })
     )
@@ -151,6 +157,11 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
           >
             {t.registering ? '…' : t.registered ? 'Abmelden' : 'Anmelden'}
           </button>
+          {t.aufgeboten && (
+            <span className="inline-flex items-center justify-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-500/10 text-green-600">
+              ✓ Aufgeboten
+            </span>
+          )}
           {t.maps_url && (
             <a href={t.maps_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 hover:border-border hover:bg-muted transition-colors">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
