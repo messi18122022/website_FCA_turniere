@@ -139,6 +139,14 @@ export default function ElternTurnierePage() {
 }
 
 function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerName: string; onToggle: () => void }) {
+  const [expanded, setExpanded] = useState(false)
+  const hasDetails = t.registeredNames.length > 0 || t.aufgebotNames.length > 0
+
+  const summary = [
+    t.registeredNames.length > 0 && `${t.registeredNames.length} angemeldet`,
+    t.aufgebotNames.length > 0 && `Aufgebot: ${t.aufgebotNames.length}`,
+  ].filter(Boolean).join(' · ')
+
   return (
     <div className={cn('rounded-xl border px-4 py-4 transition-colors', t.registered ? 'border-primary/50 bg-primary/5' : 'border-border/60')}>
       <div className="flex items-start justify-between gap-3">
@@ -185,7 +193,8 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
           )}
         </div>
       </div>
-      {t.registeredNames.length > 0 && (
+
+      {expanded && t.registeredNames.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground mb-1.5">{t.registeredNames.length} {t.registeredNames.length === 1 ? 'Kind' : 'Kinder'} angemeldet</p>
           <div className="flex flex-wrap gap-1.5">
@@ -196,7 +205,7 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
         </div>
       )}
 
-      {t.aufgebotNames.length > 0 && (
+      {expanded && t.aufgebotNames.length > 0 && (
         <div className="mt-3 pt-3 border-t border-border/40">
           <p className="text-xs text-muted-foreground mb-1.5">Aufgebot: {t.aufgebotNames.length} {t.aufgebotNames.length === 1 ? 'Kind' : 'Kinder'}</p>
           <div className="flex flex-wrap gap-1.5">
@@ -205,6 +214,18 @@ function TournamentCard({ t, playerName, onToggle }: { t: TournamentRow; playerN
             ))}
           </div>
         </div>
+      )}
+
+      {hasDetails && (
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="mt-3 pt-3 border-t border-border/40 w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <span>{expanded ? 'Weniger anzeigen' : summary}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-200', expanded && 'rotate-180')}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
       )}
     </div>
   )
