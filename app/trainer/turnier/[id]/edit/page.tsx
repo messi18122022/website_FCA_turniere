@@ -17,6 +17,9 @@ export default function EditTournamentPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [toggling, setToggling] = useState(false)
+  const [abgeschlossen, setAbgeschlossen] = useState(false)
   const [form, setForm] = useState({
     name: '', date: '', time: '', location: '', mapsUrl: '', spielplanUrl: '',
     modus: '', modusCustom: '', belag: '', notes: '',
@@ -30,6 +33,7 @@ export default function EditTournamentPage() {
     supabase.from('tournaments').select('*').eq('id', id).single().then(({ data }) => {
       if (!data) { router.replace('/trainer/turniere'); return }
       const isCustomModus = data.modus && !['4+1', '5+1', '6+1'].includes(data.modus)
+      setAbgeschlossen(data.abgeschlossen ?? false)
       setForm({
         name: data.name ?? '',
         date: data.date ?? '',
@@ -54,11 +58,7 @@ export default function EditTournamentPage() {
     e.preventDefault()
     if (!form.name.trim() || !form.date) return
     setSaving(true)
-
-    const modusValue = form.modus === 'Spezielles'
-      ? form.modusCustom.trim() || null
-      : form.modus || null
-
+    const modusValue = form.modus === 'Spezielles' ? form.modusCustom.trim() || null : form.modus || null
     await supabase.from('tournaments').update({
       name: form.name.trim(),
       date: form.date,
@@ -70,9 +70,25 @@ export default function EditTournamentPage() {
       belag: form.belag || null,
       notes: form.notes.trim() || null,
     }).eq('id', id)
-
-    router.push(`/trainer/turnier/${id}`)
+    router.push(abgeschlossen ? '/trainer/turniere/abgeschlossen' : '/trainer/turniere')
   }
+
+  async function deleteTournament() {
+    if (!confirm('Turnier und alle Anmeldungen löschen?')) return
+    setDeleting(true)
+    await supabase.from('tournaments').delete().eq('id', id)
+    router.push('/trainer/turniere')
+  }
+
+  async function toggleAbgeschlossen() {
+    setToggling(true)
+    const newVal = !abgeschlossen
+    await supabase.from('tournaments').update({ abgeschlossen: newVal }).eq('id', id)
+    setAbgeschlossen(newVal)
+    setToggling(false)
+  }
+
+  const backHref = abgeschlossen ? '/trainer/turniere/abgeschlossen' : '/trainer/turniere'
 
   if (loading) return (
     <div className="space-y-3 animate-pulse">
@@ -83,7 +99,7 @@ export default function EditTournamentPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={`/trainer/turnier/${id}`} className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/60 transition-colors shrink-0">
+        <Link href={backHref} className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/60 transition-colors shrink-0">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6"/>
           </svg>
@@ -131,9 +147,7 @@ export default function EditTournamentPage() {
                 onClick={() => set('modus', form.modus === m ? '' : m)}
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors',
-                  form.modus === m
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border text-muted-foreground hover:text-foreground'
+                  form.modus === m ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:text-foreground'
                 )}
               >{m}</button>
             ))}
@@ -151,9 +165,7 @@ export default function EditTournamentPage() {
                 onClick={() => set('belag', form.belag === b ? '' : b)}
                 className={cn(
                   'px-4 py-1.5 rounded-lg text-sm font-medium border transition-colors',
-                  form.belag === b
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-border text-muted-foreground hover:text-foreground'
+                  form.belag === b ? 'bg-primary text-primary-foreground border-primary' : 'border-border text-muted-foreground hover:text-foreground'
                 )}
               >{b === 'Halle' ? '🏟 Halle' : '🌱 Rasen'}</button>
             ))}
@@ -165,15 +177,33 @@ export default function EditTournamentPage() {
           <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()} disabled={saving}>
-            Abbrechen
-          </Button>
-          <Button type="submit" className="flex-1" disabled={saving || !form.name || !form.date}>
-            {saving ? 'Speichern…' : 'Änderungen speichern'}
-          </Button>
-        </div>
+        <Button type="submit" className="w-full h-12 rounded-xl" disabled={saving || !form.name || !form.date}>
+          {saving ? 'Speichern…' : 'Änderungen speichern'}
+        </Button>
       </form>
+
+      <div className="flex items-center gap-3 pt-2 border-t border-border/40">
+        <button
+          onClick={deleteTournament}
+          disabled={deleting}
+          title="Turnier löschen"
+          className="h-12 w-12 rounded-xl bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors disabled:opacity-50 shrink-0"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+          </svg>
+        </button>
+        <button
+          onClick={toggleAbgeschlossen}
+          disabled={toggling}
+          className="flex-1 py-3 rounded-xl text-sm font-semibold border border-border/60 text-muted-foreground hover:bg-muted transition-colors disabled:opacity-50"
+        >
+          {toggling ? '…' : abgeschlossen ? 'Wieder öffnen' : 'Turnier abschliessen'}
+        </button>
+      </div>
     </div>
   )
 }
