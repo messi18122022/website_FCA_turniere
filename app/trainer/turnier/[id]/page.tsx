@@ -46,11 +46,6 @@ export default function TrainerTurnierDetailPage() {
     setLoading(false)
   }
 
-  async function removeRegistration(playerId: string) {
-    await supabase.from('tournament_registrations').delete().eq('tournament_id', id).eq('player_id', playerId)
-    setRegistrations((prev) => prev.filter((p) => p.id !== playerId))
-  }
-
   async function deleteTournament() {
     if (!confirm('Turnier und alle Anmeldungen löschen?')) return
     setDeleting(true)
@@ -135,16 +130,8 @@ export default function TrainerTurnierDetailPage() {
 
         <div className="space-y-2">
           {registrations.map((player) => (
-            <div key={player.id} className="flex items-center justify-between rounded-xl border border-border/60 px-4 py-3">
+            <div key={player.id} className="rounded-xl border border-border/60 px-4 py-3">
               <span className="text-sm font-medium">{player.vorname}</span>
-              {!tournament.abgeschlossen && (
-                <button
-                  onClick={() => removeRegistration(player.id)}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors"
-                >
-                  Abmelden
-                </button>
-              )}
             </div>
           ))}
         </div>
