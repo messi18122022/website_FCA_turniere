@@ -11,6 +11,7 @@ export default function ElternPinPage() {
   const [playerId, setPlayerId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
 
   useEffect(() => {
     const id = sessionStorage.getItem('fca_player_id')
@@ -43,11 +44,13 @@ export default function ElternPinPage() {
 
     if (!data?.birthdate) {
       setError('Kein Geburtsdatum hinterlegt. Bitte den Trainer kontaktieren.')
+      setResetKey(k => k + 1)
       return
     }
 
     if (data.birthdate !== birthdate) {
       setError('Geburtsdatum stimmt nicht. Bitte erneut versuchen.')
+      setResetKey(k => k + 1)
       return
     }
 
@@ -60,6 +63,7 @@ export default function ElternPinPage() {
 
   return (
     <Numpad
+      key={resetKey}
       mode="date"
       title={`Hallo, ${playerName}!`}
       subtitle="Bitte Geburtsdatum eingeben zur Bestätigung"

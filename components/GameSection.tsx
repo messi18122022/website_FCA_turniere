@@ -51,7 +51,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
     async function load() {
       const { data: gData } = await supabase
         .from('tournament_games')
-        .select('id, opponent, goals_fca, goals_opponent')
+        .select('id, opponent, goals_fca, goals_opponent, own_goals')
         .eq('tournament_id', tournamentId)
         .order('created_at')
       const gs = (gData ?? []) as Game[]
@@ -71,7 +71,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
   async function reload() {
     const { data: gData } = await supabase
       .from('tournament_games')
-      .select('id, opponent, goals_fca, goals_opponent')
+      .select('id, opponent, goals_fca, goals_opponent, own_goals')
       .eq('tournament_id', tournamentId)
       .order('created_at')
     const gs = (gData ?? []) as Game[]
@@ -118,6 +118,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
       opponent: editOpponent.trim() || 'Gegner',
       goals_fca: editFca,
       goals_opponent: editOppGoals,
+      own_goals: editOwnGoals,
     }).eq('id', editId)
     if (err) { setError(err.message); setSaving(false); return }
     await supabase.from('game_goals').delete().eq('game_id', editId)
