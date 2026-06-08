@@ -14,12 +14,31 @@ interface TournamentRow extends Tournament {
   registeredNames: string[]
 }
 
+type Tab = 'anstehend' | 'abgeschlossen'
+
+function LogoutButton({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="h-9 w-9 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors flex items-center justify-center shrink-0"
+      aria-label="Abmelden"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
+  )
+}
+
 export default function ElternTurnierePage() {
   const router = useRouter()
   const [playerName, setPlayerName] = useState('')
   const [playerId, setPlayerId] = useState('')
   const [tournaments, setTournaments] = useState<TournamentRow[]>([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<Tab>('anstehend')
 
   useEffect(() => {
     const id = sessionStorage.getItem('fca_auth_player_id')
@@ -35,10 +54,9 @@ export default function ElternTurnierePage() {
 
   async function loadTournaments(pid: string) {
     setLoading(true)
-    const today = new Date().toISOString().split('T')[0]
 
     const [{ data: tourData }, { data: allRegData }, { data: playersData }] = await Promise.all([
-      supabase.from('tournaments').select('*').gte('date', today).order('date', { ascending: true }),
+      supabase.from('tournaments').select('*').order('date', { ascending: true }),
       supabase.from('tournament_registrations').select('tournament_id, player_id'),
       supabase.from('players').select('id, vorname'),
     ])
@@ -116,15 +134,49 @@ export default function ElternTurnierePage() {
     router.push('/')
   }
 
+  const anstehend = tournaments.filter((t) => !t.abgeschlossen)
+  const abgeschlossen = tournaments.filter((t) => t.abgeschlossen)
+  const visible = activeTab === 'anstehend' ? anstehend : abgeschlossen
+
   return (
     <div className="space-y-5">
-      <div className="flex items-start justify-between">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight">{playerName}</h1>
-          <p className="text-sm text-muted-foreground mt-1">Anstehende Turniere</p>
+          <p className="text-sm text-muted-foreground mt-1">Turniere</p>
         </div>
-        <button onClick={logout} className="text-xs text-muted-foreground hover:text-foreground transition-colors pt-1">
-          Abmelden
+        <LogoutButton onClick={logout} />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-xl bg-muted">
+        <button
+          onClick={() => setActiveTab('anstehend')}
+          className={cn(
+            'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
+            activeTab === 'anstehend'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Anstehend
+          {!loading && anstehend.length > 0 && (
+            <span className="ml-1.5 text-xs text-muted-foreground">({anstehend.length})</span>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('abgeschlossen')}
+          className={cn(
+            'flex-1 py-2 text-sm font-medium rounded-lg transition-colors',
+            activeTab === 'abgeschlossen'
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          )}
+        >
+          Abgeschlossen
+          {!loading && abgeschlossen.length > 0 && (
+            <span className="ml-1.5 text-xs text-muted-foreground">({abgeschlossen.length})</span>
+          )}
         </button>
       </div>
 
@@ -134,28 +186,29 @@ export default function ElternTurnierePage() {
         </div>
       )}
 
-      {!loading && tournaments.length === 0 && (
+      {!loading && visible.length === 0 && (
         <div className="text-center py-16 space-y-2">
           <p className="text-4xl">🏆</p>
-          <p className="text-muted-foreground text-sm">Aktuell keine Turniere geplant.</p>
+          <p className="text-muted-foreground text-sm">
+            {activeTab === 'anstehend' ? 'Aktuell keine Turniere geplant.' : 'Noch keine abgeschlossenen Turniere.'}
+          </p>
         </div>
       )}
 
-      {!loading && tournaments.length > 0 && (
+      {!loading && visible.length > 0 && (
         <div className="space-y-3">
-          {tournaments.map((t) => (
+          {visible.map((t) => (
             <div
               key={t.id}
               className={cn(
                 'rounded-xl border px-4 py-4 transition-colors',
-                t.registered ? 'border-primary/50 bg-primary/5' : 'border-border/60'
+                t.registered ? 'border-primary/50 bg-primary/5' : 'border-border/60',
+                t.abgeschlossen && 'opacity-70'
               )}
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-base font-bold">{t.name}</span>
-                  </div>
+                  <span className="text-base font-bold">{t.name}</span>
                   <div className="space-y-0.5 text-sm text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <span>📅</span>
@@ -216,18 +269,26 @@ export default function ElternTurnierePage() {
                   )}
                 </div>
 
-                <button
-                  onClick={() => toggleRegistration(t)}
-                  disabled={t.registering}
-                  className={cn(
-                    'shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50',
-                    t.registered
-                      ? 'bg-primary/15 text-primary hover:bg-primary/25'
-                      : 'bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground'
-                  )}
-                >
-                  {t.registering ? '…' : t.registered ? '✓ Angemeldet' : 'Anmelden'}
-                </button>
+                {!t.abgeschlossen && (
+                  <button
+                    onClick={() => toggleRegistration(t)}
+                    disabled={t.registering}
+                    className={cn(
+                      'shrink-0 rounded-xl px-4 py-2 text-sm font-semibold transition-all active:scale-95 disabled:opacity-50',
+                      t.registered
+                        ? 'bg-primary/15 text-primary hover:bg-primary/25'
+                        : 'bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground'
+                    )}
+                  >
+                    {t.registering ? '…' : t.registered ? '✓ Angemeldet' : 'Anmelden'}
+                  </button>
+                )}
+
+                {t.abgeschlossen && t.registered && (
+                  <span className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-primary/15 text-primary">
+                    ✓ Angemeldet
+                  </span>
+                )}
               </div>
 
               {t.registeredNames.length > 0 && (
