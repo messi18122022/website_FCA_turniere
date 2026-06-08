@@ -6,15 +6,28 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
-const navLinks = [
-  { href: '/', label: 'Startseite' },
-]
+function getNavLinks(pathname: string) {
+  if (pathname.startsWith('/eltern/turniere')) {
+    return [
+      { href: '/eltern/turniere', label: 'Anstehend' },
+      { href: '/eltern/turniere/abgeschlossen', label: 'Abgeschlossen' },
+    ]
+  }
+  if (pathname.startsWith('/trainer/turniere') || pathname.startsWith('/trainer/turnier')) {
+    return [
+      { href: '/trainer/turniere', label: 'Anstehend' },
+      { href: '/trainer/turniere/abgeschlossen', label: 'Abgeschlossen' },
+    ]
+  }
+  return []
+}
 
 export default function Header() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const menuRef = useRef<HTMLDivElement>(null)
-  const isHome = pathname === '/'
+  const navLinks = getNavLinks(pathname)
+  const showMenu = navLinks.length > 0
 
   useEffect(() => {
     setOpen(false)
@@ -37,7 +50,7 @@ export default function Header() {
           <Image src="/icon-192.png" alt="FCA" width={36} height={36} className="rounded-lg" />
         </Link>
 
-        {!isHome && (
+        {showMenu && (
           <button
             onClick={() => setOpen((v) => !v)}
             className="h-9 w-9 flex flex-col items-center justify-center gap-[5px] rounded-lg hover:bg-muted transition-colors"
@@ -59,7 +72,7 @@ export default function Header() {
         )}
       </div>
 
-      {!isHome && (
+      {showMenu && (
         <div className={cn(
           'overflow-hidden transition-all duration-200 ease-in-out',
           open ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
