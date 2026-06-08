@@ -34,6 +34,7 @@ export default function TrainerPage() {
       onComplete={handlePin}
       error={error}
       loading={loading}
+      backHref="/"
     />
   )
 }

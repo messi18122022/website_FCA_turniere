@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface NumpadProps {
@@ -10,31 +11,39 @@ interface NumpadProps {
   subtitle?: string
   error?: string | null
   loading?: boolean
+  backHref?: string
 }
 
-export default function Numpad({ mode, onComplete, title, subtitle, error, loading }: NumpadProps) {
+export default function Numpad({ mode, onComplete, title, subtitle, error, loading, backHref }: NumpadProps) {
   const [digits, setDigits] = useState('')
+  const [lastPressed, setLastPressed] = useState<string | null>(null)
   const maxLen = mode === 'date' ? 8 : 4
 
   function addDigit(d: string) {
     if (digits.length >= maxLen || loading) return
-    setDigits((prev) => prev + d)
+    setLastPressed(d)
+    setTimeout(() => setLastPressed(null), 180)
+    setDigits(prev => prev + d)
   }
 
   function backspace() {
     if (loading) return
-    setDigits((prev) => prev.slice(0, -1))
+    setDigits(prev => prev.slice(0, -1))
   }
 
-  function confirm() {
-    if (digits.length === maxLen && !loading) onComplete(digits)
-  }
+  // Auto-submit when complete
+  useEffect(() => {
+    if (digits.length === maxLen && !loading) {
+      const t = setTimeout(() => onComplete(digits), 250)
+      return () => clearTimeout(t)
+    }
+  }, [digits, maxLen, loading])
 
+  // Keyboard support
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key >= '0' && e.key <= '9') addDigit(e.key)
       else if (e.key === 'Backspace') backspace()
-      else if (e.key === 'Enter') confirm()
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
@@ -76,10 +85,24 @@ export default function Numpad({ mode, onComplete, title, subtitle, error, loadi
 
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
-        {subtitle && <p className="text-sm text-muted-foreground mt-1.5">{subtitle}</p>}
-      </div>
+      {backHref ? (
+        <div className="flex items-center gap-3">
+          <Link href={backHref} className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/60 transition-colors shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </Link>
+          <div className="flex-1 text-center pr-10">
+            <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground mt-1.5">{subtitle}</p>}
+          </div>
+        </div>
+      ) : (
+        <div className="text-center">
+          <h1 className="text-2xl font-extrabold tracking-tight">{title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground mt-1.5">{subtitle}</p>}
+        </div>
+      )}
 
       <div className={cn(
         'rounded-2xl border px-6 py-5 text-center transition-colors',
@@ -101,7 +124,13 @@ export default function Numpad({ mode, onComplete, title, subtitle, error, loadi
             type="button"
             onClick={() => addDigit(d)}
             disabled={digits.length >= maxLen || !!loading}
-            className="h-16 rounded-2xl border border-border/60 bg-card text-xl font-bold hover:bg-muted hover:border-border active:scale-95 transition-all disabled:opacity-30 select-none"
+            className={cn(
+              'h-16 rounded-2xl border text-xl font-bold transition-all duration-150 select-none',
+              lastPressed === d
+                ? 'bg-primary text-primary-foreground border-primary scale-[0.93] shadow-md'
+                : 'border-border/60 bg-card hover:bg-muted hover:border-border active:scale-95',
+              (digits.length >= maxLen || !!loading) && 'opacity-30'
+            )}
           >
             {d}
           </button>
@@ -124,18 +153,15 @@ export default function Numpad({ mode, onComplete, title, subtitle, error, loadi
           type="button"
           onClick={() => addDigit('0')}
           disabled={digits.length >= maxLen || !!loading}
-          className="h-16 rounded-2xl border border-border/60 bg-card text-xl font-bold hover:bg-muted hover:border-border active:scale-95 transition-all disabled:opacity-30 select-none"
+          className={cn(
+            'col-span-2 h-16 rounded-2xl border text-xl font-bold transition-all duration-150 select-none',
+            lastPressed === '0'
+              ? 'bg-primary text-primary-foreground border-primary scale-[0.93] shadow-md'
+              : 'border-border/60 bg-card hover:bg-muted hover:border-border active:scale-95',
+            (digits.length >= maxLen || !!loading) && 'opacity-30'
+          )}
         >
-          0
-        </button>
-
-        <button
-          type="button"
-          onClick={confirm}
-          disabled={digits.length < maxLen || !!loading}
-          className="h-16 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/80 active:scale-95 transition-all disabled:opacity-30 select-none"
-        >
-          {loading ? '…' : 'OK'}
+          {loading ? '…' : '0'}
         </button>
       </div>
     </div>
