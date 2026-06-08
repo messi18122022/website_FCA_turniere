@@ -170,26 +170,40 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
 
   const hasAufgebot = aufgebotPlayers.length > 0
   const isInteracting = adding || editId !== null
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <div className="mt-3 pt-3 border-t border-border/40">
       {error && (
         <p className="text-xs text-red-500 mb-2 bg-red-500/10 rounded-lg px-2 py-1">{error}</p>
       )}
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Spiele</p>
-        {mode === 'trainer' && !isInteracting && (
-          <button
-            onClick={() => setAdding(true)}
-            className="w-6 h-6 rounded-full bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors flex items-center justify-center"
-            aria-label="Spiel hinzufügen"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-          </button>
-        )}
+      <div className="flex justify-center">
+        <button
+          onClick={() => setExpanded(e => !e)}
+          className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-border/60 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-muted/50 transition-all duration-200 active:scale-95"
+        >
+          <span>{expanded ? 'Weniger' : `Spiele${games.length > 0 ? ` · ${games.length}` : ''}`}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform duration-300', expanded && 'rotate-180')}>
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
       </div>
+
+      <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0')}>
+        <div className="pt-3 flex items-center justify-between mb-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Spiele</p>
+          {mode === 'trainer' && !isInteracting && (
+            <button
+              onClick={() => setAdding(true)}
+              className="w-6 h-6 rounded-full bg-green-500/20 text-green-600 hover:bg-green-500/30 transition-colors flex items-center justify-center"
+              aria-label="Spiel hinzufügen"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+          )}
+        </div>
 
       <div className="space-y-2">
         {games.map(game => (
@@ -363,6 +377,7 @@ export default function GameSection({ tournamentId, aufgebotPlayers, playerMap, 
         {loaded && games.length === 0 && !adding && mode === 'trainer' && (
           <p className="text-xs text-muted-foreground">Noch keine Spiele erfasst.</p>
         )}
+      </div>
       </div>
     </div>
   )
