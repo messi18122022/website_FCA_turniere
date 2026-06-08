@@ -20,6 +20,8 @@ export interface Tournament {
   spielplan_url: string | null
   notes: string | null
   abgeschlossen: boolean
+  rang: number | null
+  total_teams: number | null
   created_at: string
 }
 

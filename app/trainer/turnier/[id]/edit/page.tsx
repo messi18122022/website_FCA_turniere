@@ -21,6 +21,9 @@ export default function EditTournamentPage() {
   const [deleting, setDeleting] = useState(false)
   const [toggling, setToggling] = useState(false)
   const [abgeschlossen, setAbgeschlossen] = useState(false)
+  const [showRangDialog, setShowRangDialog] = useState(false)
+  const [rangInput, setRangInput] = useState('')
+  const [totalTeamsInput, setTotalTeamsInput] = useState('')
   const [form, setForm] = useState({
     name: '', date: '', time: '', location: '', mapsUrl: '', spielplanUrl: '',
     modus: '', modusCustom: '', belag: '', notes: '',
@@ -82,10 +85,23 @@ export default function EditTournamentPage() {
   }
 
   async function toggleAbgeschlossen() {
+    if (!abgeschlossen) {
+      setShowRangDialog(true)
+      return
+    }
     setToggling(true)
-    const newVal = !abgeschlossen
-    await supabase.from('tournaments').update({ abgeschlossen: newVal }).eq('id', id)
-    setAbgeschlossen(newVal)
+    await supabase.from('tournaments').update({ abgeschlossen: false }).eq('id', id)
+    setAbgeschlossen(false)
+    setToggling(false)
+  }
+
+  async function confirmAbschliessen() {
+    const rang = parseInt(rangInput) || null
+    const total_teams = parseInt(totalTeamsInput) || null
+    setToggling(true)
+    setShowRangDialog(false)
+    await supabase.from('tournaments').update({ abgeschlossen: true, rang, total_teams }).eq('id', id)
+    setAbgeschlossen(true)
     setToggling(false)
   }
 
@@ -176,6 +192,48 @@ export default function EditTournamentPage() {
           <Label htmlFor="notes">Notizen</Label>
           <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
+
+        {showRangDialog && (
+          <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
+            <p className="text-sm font-semibold">Welchen Rang habt ihr belegt?</p>
+            <div className="flex items-center gap-2">
+              <input
+                type="number" min={1} max={99}
+                value={rangInput}
+                onChange={e => setRangInput(e.target.value)}
+                placeholder="1"
+                autoFocus
+                className="w-14 h-10 rounded-lg border border-border bg-background text-center text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <span className="text-sm text-muted-foreground">. von</span>
+              <input
+                type="number" min={1} max={99}
+                value={totalTeamsInput}
+                onChange={e => setTotalTeamsInput(e.target.value)}
+                placeholder="10"
+                className="w-14 h-10 rounded-lg border border-border bg-background text-center text-sm font-bold focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+              <span className="text-sm text-muted-foreground">Teams</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRangDialog(false)}
+                className="flex-1 h-10 rounded-xl border border-border/60 text-sm text-muted-foreground hover:bg-muted transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={confirmAbschliessen}
+                disabled={!rangInput || !totalTeamsInput}
+                className="flex-1 h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-40"
+              >
+                Abschliessen
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-3 pt-2 border-t border-border/40">
           <button

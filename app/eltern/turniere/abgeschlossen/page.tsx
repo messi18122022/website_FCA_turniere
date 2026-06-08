@@ -124,9 +124,16 @@ function AbgeschlossenCard({ t, playerName, playerMap }: { t: TournamentRow; pla
             {t.modus && <div className="flex items-center gap-1.5"><span>⚽</span><span>{t.modus}</span></div>}
           </div>
         </div>
-        {t.registered && (
-          <span className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-primary/15 text-primary">✓ War dabei</span>
-        )}
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          {t.rang != null && t.total_teams != null && (
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/15 text-primary">
+              {t.rang}. / {t.total_teams}
+            </span>
+          )}
+          {t.registered && (
+            <span className="rounded-xl px-4 py-2 text-sm font-semibold bg-primary/15 text-primary">✓ War dabei</span>
+          )}
+        </div>
       </div>
 
       <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>

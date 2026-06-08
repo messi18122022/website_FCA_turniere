@@ -126,9 +126,16 @@ function AbgeschlossenCard({ t, playerMap }: { t: TournamentRow; playerMap: Reco
           </div>
           {t.notes && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{t.notes}</p>}
         </div>
-        <Link href={`/trainer/turnier/${t.id}/edit`} className="shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">
-          Bearbeiten
-        </Link>
+        <div className="shrink-0 flex flex-col items-end gap-1.5">
+          {t.rang != null && t.total_teams != null && (
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary/15 text-primary">
+              {t.rang}. / {t.total_teams}
+            </span>
+          )}
+          <Link href={`/trainer/turnier/${t.id}/edit`} className="rounded-xl px-4 py-2 text-sm font-semibold bg-card border border-border/60 text-muted-foreground hover:border-border hover:text-foreground transition-all">
+            Bearbeiten
+          </Link>
+        </div>
       </div>
 
       <div className={cn('overflow-hidden transition-all duration-300 ease-in-out', expanded ? 'max-h-[900px] opacity-100' : 'max-h-0 opacity-0')}>
