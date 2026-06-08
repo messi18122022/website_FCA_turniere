@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import DatePicker from '@/components/DatePicker'
 
 const MODUS_OPTIONS = ['4+1', '5+1', '6+1', 'Spezielles']
 const BELAG_OPTIONS = ['Halle', 'Rasen'] as const
@@ -113,15 +114,14 @@ export default function EditTournamentPage() {
           <Input id="name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="date">Datum *</Label>
-            <Input id="date" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="time">Zeit</Label>
-            <Input id="time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
-          </div>
+        <div className="space-y-2">
+          <Label>Datum *</Label>
+          <DatePicker value={form.date} onChange={(v) => set('date', v)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="time">Zeit</Label>
+          <Input id="time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
         </div>
 
         <div className="space-y-2">

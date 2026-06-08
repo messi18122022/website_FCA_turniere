@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils'
+import DatePicker from '@/components/DatePicker'
 
 const MODUS_OPTIONS = ['4+1', '5+1', '6+1', 'Spezielles']
 const BELAG_OPTIONS = ['Halle', 'Rasen'] as const
@@ -57,11 +58,13 @@ export default function NewTournamentPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/trainer/turniere" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          ← Zurück
+      <div className="flex items-center gap-3">
+        <Link href="/trainer/turniere" className="h-10 w-10 rounded-xl bg-muted flex items-center justify-center hover:bg-muted/60 transition-colors shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
         </Link>
-        <h1 className="text-2xl font-extrabold tracking-tight mt-3">Neues Turnier</h1>
+        <h1 className="text-2xl font-extrabold tracking-tight">Neues Turnier</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -70,15 +73,14 @@ export default function NewTournamentPage() {
           <Input id="name" placeholder="z.B. Hallencup FC Altstetten" value={form.name} onChange={(e) => set('name', e.target.value)} required />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor="date">Datum *</Label>
-            <Input id="date" type="date" value={form.date} onChange={(e) => set('date', e.target.value)} required />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="time">Zeit</Label>
-            <Input id="time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
-          </div>
+        <div className="space-y-2">
+          <Label>Datum *</Label>
+          <DatePicker value={form.date} onChange={(v) => set('date', v)} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="time">Zeit</Label>
+          <Input id="time" type="time" value={form.time} onChange={(e) => set('time', e.target.value)} />
         </div>
 
         <div className="space-y-2">
@@ -151,11 +153,8 @@ export default function NewTournamentPage() {
           <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()} disabled={saving}>
-            Abbrechen
-          </Button>
-          <Button type="submit" className="flex-1" disabled={saving || !form.name || !form.date}>
+        <div className="pt-2">
+          <Button type="submit" className="w-full" disabled={saving || !form.name || !form.date}>
             {saving ? 'Speichern…' : 'Turnier erstellen'}
           </Button>
         </div>
