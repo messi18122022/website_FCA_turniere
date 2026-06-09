@@ -14,7 +14,7 @@ function getNavLinks(pathname: string) {
       { href: '/eltern/statistiken', label: 'Statistiken' },
     ]
   }
-  if (pathname.startsWith('/trainer/turniere') || pathname.startsWith('/trainer/turnier') || pathname === '/trainer/statistiken') {
+  if (pathname.startsWith('/trainer/turniere') || pathname === '/trainer/statistiken') {
     return [
       { href: '/trainer/turniere', label: 'Anstehend' },
       { href: '/trainer/turniere/abgeschlossen', label: 'Abgeschlossen' },
