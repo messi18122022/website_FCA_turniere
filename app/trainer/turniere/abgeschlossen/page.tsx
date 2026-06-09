@@ -75,6 +75,10 @@ export default function TrainerAbgeschlossenPage() {
 
   function logout() {
     sessionStorage.removeItem('fca_trainer')
+    sessionStorage.removeItem('fca_player_id')
+    sessionStorage.removeItem('fca_player_name')
+    sessionStorage.removeItem('fca_auth_player_id')
+    sessionStorage.removeItem('fca_auth_player_name')
     router.push('/')
   }
 
