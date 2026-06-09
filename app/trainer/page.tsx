@@ -9,6 +9,7 @@ export default function TrainerPage() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [resetKey, setResetKey] = useState(0)
 
   async function handlePin(pin: string) {
     setLoading(true)
@@ -19,6 +20,7 @@ export default function TrainerPage() {
 
     if (!ok) {
       setError('Falscher PIN. Bitte erneut versuchen.')
+      setResetKey(k => k + 1)
       return
     }
 
@@ -28,6 +30,7 @@ export default function TrainerPage() {
 
   return (
     <Numpad
+      key={resetKey}
       mode="pin"
       title="Trainer-Login"
       subtitle="PIN eingeben"
