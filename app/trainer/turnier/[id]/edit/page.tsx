@@ -78,8 +78,16 @@ export default function EditTournamentPage() {
   }
 
   async function deleteTournament() {
-    if (!confirm('Turnier und alle Anmeldungen löschen?')) return
+    if (!confirm('Turnier und alle Daten löschen?')) return
     setDeleting(true)
+    const { data: games } = await supabase.from('tournament_games').select('id').eq('tournament_id', id)
+    if (games && games.length > 0) {
+      const gameIds = games.map(g => g.id)
+      await supabase.from('game_goals').delete().in('game_id', gameIds)
+    }
+    await supabase.from('tournament_games').delete().eq('tournament_id', id)
+    await supabase.from('tournament_aufgebot').delete().eq('tournament_id', id)
+    await supabase.from('tournament_registrations').delete().eq('tournament_id', id)
     await supabase.from('tournaments').delete().eq('id', id)
     router.push('/trainer/turniere')
   }
