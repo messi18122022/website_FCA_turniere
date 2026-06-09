@@ -81,13 +81,23 @@ export default function ElternTurnierePage() {
   async function toggleRegistration(tournament: TournamentRow) {
     setTournaments((prev) => prev.map((t) => (t.id === tournament.id ? { ...t, registering: true } : t)))
     if (tournament.registered) {
-      await supabase.from('tournament_registrations').delete().eq('tournament_id', tournament.id).eq('player_id', playerId)
+      const { error } = await supabase.from('tournament_registrations').delete().eq('tournament_id', tournament.id).eq('player_id', playerId)
+      if (error) {
+        setTournaments((prev) => prev.map((t) => t.id === tournament.id ? { ...t, registering: false } : t))
+        alert('Abmelden fehlgeschlagen. Bitte erneut versuchen.')
+        return
+      }
       setTournaments((prev) => prev.map((t) => t.id === tournament.id
         ? { ...t, registered: false, registering: false, registeredNames: t.registeredNames.filter((n) => n !== playerName) }
         : t
       ))
     } else {
-      await supabase.from('tournament_registrations').insert({ tournament_id: tournament.id, player_id: playerId })
+      const { error } = await supabase.from('tournament_registrations').insert({ tournament_id: tournament.id, player_id: playerId })
+      if (error) {
+        setTournaments((prev) => prev.map((t) => t.id === tournament.id ? { ...t, registering: false } : t))
+        alert('Anmelden fehlgeschlagen. Bitte erneut versuchen.')
+        return
+      }
       setTournaments((prev) => prev.map((t) => t.id === tournament.id
         ? { ...t, registered: true, registering: false, registeredNames: [...t.registeredNames, playerName].sort() }
         : t

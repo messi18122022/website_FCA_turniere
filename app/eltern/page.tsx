@@ -48,7 +48,15 @@ export default function ElternPage() {
         </div>
       )}
 
-      {!loading && (
+      {!loading && players.length === 0 && (
+        <div className="text-center py-16 space-y-2">
+          <p className="text-4xl">👤</p>
+          <p className="text-muted-foreground text-sm">Keine Spieler vorhanden.</p>
+          <p className="text-muted-foreground text-sm">Bitte den Trainer kontaktieren.</p>
+        </div>
+      )}
+
+      {!loading && players.length > 0 && (
         <div className="space-y-2">
           {players.map((player) => (
             <button
