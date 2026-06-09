@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import Header from '@/components/Header'
+import InactivityGuard from '@/components/InactivityGuard'
 import './globals.css'
 
 const jakarta = Plus_Jakarta_Sans({
@@ -38,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="max-w-2xl mx-auto px-4 py-6">
           {children}
         </main>
+        <InactivityGuard />
       </body>
     </html>
   )
