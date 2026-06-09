@@ -22,6 +22,7 @@ export default function EditTournamentPage() {
   const [toggling, setToggling] = useState(false)
   const [abgeschlossen, setAbgeschlossen] = useState(false)
   const [showRangDialog, setShowRangDialog] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [rangInput, setRangInput] = useState('')
   const [totalTeamsInput, setTotalTeamsInput] = useState('')
   const [form, setForm] = useState({
@@ -78,7 +79,6 @@ export default function EditTournamentPage() {
   }
 
   async function deleteTournament() {
-    if (!confirm('Turnier und alle Daten löschen?')) return
     setDeleting(true)
     const { data: games } = await supabase.from('tournament_games').select('id').eq('tournament_id', id)
     if (games && games.length > 0) {
@@ -201,6 +201,29 @@ export default function EditTournamentPage() {
           <Input id="notes" placeholder="z.B. Treffpunkt 8:30 Uhr beim Clubhaus" value={form.notes} onChange={(e) => set('notes', e.target.value)} />
         </div>
 
+        {showDeleteDialog && (
+          <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 space-y-3">
+            <p className="text-sm font-semibold">Turnier wirklich löschen?</p>
+            <p className="text-xs text-muted-foreground">Alle Anmeldungen, Spiele und Torschützen werden ebenfalls gelöscht.</p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteDialog(false)}
+                className="flex-1 h-10 rounded-xl border border-border/60 text-sm text-muted-foreground hover:bg-muted transition-colors"
+              >
+                Abbrechen
+              </button>
+              <button
+                type="button"
+                onClick={deleteTournament}
+                className="flex-1 h-10 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:bg-destructive/80 transition-colors"
+              >
+                Löschen
+              </button>
+            </div>
+          </div>
+        )}
+
         {showRangDialog && (
           <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
             <p className="text-sm font-semibold">Welchen Rang habt ihr belegt?</p>
@@ -246,7 +269,7 @@ export default function EditTournamentPage() {
         <div className="flex items-center gap-3 pt-2 border-t border-border/40">
           <button
             type="button"
-            onClick={deleteTournament}
+            onClick={() => setShowDeleteDialog(true)}
             disabled={deleting}
             title="Turnier löschen"
             className="h-12 w-12 rounded-xl bg-destructive text-destructive-foreground flex items-center justify-center hover:bg-destructive/80 transition-colors disabled:opacity-50 shrink-0"
