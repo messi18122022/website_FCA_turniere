@@ -70,6 +70,7 @@ export default function ElternPinPage() {
       onComplete={handleComplete}
       error={error}
       loading={loading}
+      backHref="/eltern"
     />
   )
 }
